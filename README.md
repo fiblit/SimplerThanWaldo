@@ -8,11 +8,11 @@ Jacquelyn Sloan, Kyle Fox, Dalton Hildreth
 
 ## Goals
 ### Necessary Goals for Core Idea:
+#### Notes
+Without these our project would not seem complete
 #### Task List
 * Human Pose Estimation from Monocular
 * 3D pose estimation via various methods
-#### Notes
-Without these our project would not seem complete
 
 ### Highly Desired Goals:
 #### Notes

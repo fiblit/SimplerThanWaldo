@@ -13,6 +13,7 @@ Jacquelyn Sloan, Kyle Fox, Dalton Hildreth
 * Try to just use unix:
   ```
   cmake .
+  
   make
   ```
 * If that fails, Open the CMake-Gui

@@ -6,6 +6,23 @@ Human 3D Pose Estimation from Monocular 2D Images
 ## Contributors
 Jacquelyn Sloan, Kyle Fox, Dalton Hildreth
 
+## How-to-build:
+* Install the latest version of [CMake](https://cmake.org/download/) (I have 3.7)
+* Install [OpenCV](http://opencv.org/) as appropriate to your system
+* Clone the repo
+* Try to just use unix:
+  ```
+  cmake .
+  make
+  ```
+* If that fails, Open the CMake-Gui
+ * Set the sources directory to the repo
+ * Set the build directory to a new subdirectory of the repo called Build/ or build/
+ * Hit configure and select your compiler
+ * Add an entry called "CMAKE_PREFIX_PATH" and set it to the build folder of your installed OpenCV (I'm not sure if you actually need to do this or if my system is just wonky, for me I set it to this: absolutepath..."opencv/build")
+ * Hit configure again and check for errors
+ * If there are no errors, hit generate (and open the project if you're using Visual Studio...)
+
 ## Goals
 ### Necessary Goals for Core Idea:
 #### Notes

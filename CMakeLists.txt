@@ -1,8 +1,9 @@
+cmake_minimum_required(VERSION 3.6)
 project(SimplerThanWaldo)
 
 find_package( OpenCV REQUIRED )
 
-include_directories(${PROJECT_NAME}/Headers/
+include_directories(Headers/
                     ${OpenCV_INCLUDE_DIRS})
 
 if(MSVC)
@@ -11,8 +12,8 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++14")
 endif()
 
-file(GLOB PROJECT_HEADERS ${PROJECT_NAME}/Headers/*.hpp)
-file(GLOB PROJECT_SOURCES ${PROJECT_NAME}/Sources/*.cpp)
+file(GLOB PROJECT_HEADERS Headers/*.hpp)
+file(GLOB PROJECT_SOURCES Sources/*.cpp)
 file(GLOB PROJECT_CONFIGS CMakeLists.txt
                           README.md
                          .gitignore)

@@ -10,12 +10,7 @@ Jacquelyn Sloan, Kyle Fox, Dalton Hildreth
 * Install the latest version of [CMake](https://cmake.org/download/) (I have 3.7)
 * Install [OpenCV](http://opencv.org/) as appropriate to your system
 * Clone the repo
-* Try to just use unix:
-  ```
-  cmake .
-  
-  make
-  ```
+* Try to just use unix: `$ cmake .   $ make`
 * If that fails, Open the CMake-Gui
  * Set the sources directory to the repo
  * Set the build directory to a new subdirectory of the repo called Build/ or build/

@@ -1,0 +1,86 @@
+##### FOREWORD #####
+This aren't meant to be strict rules, rather just a general guidline to keep our code relatively consistent and easy to maintain for the next few weeks.
+Feel free to add new guidelines to this document within reason. If by adding one the codebase would become invalid, either update the codebase or don't
+add the guideline.
+
+In fact, this entire document is just a suggestion.
+
+
+
+##### NAMING #####
+Classes -> PascalCase
+Functions -> camelCase or snake_case # Personally, Dalton prefers 
+variables -> camelCase or snake_case
+
+
+
+##### INDENTATION & SPACING #####
+****(IF THERE IS ONE THING YOU DO, DO THIS)****
+4 ***spaces***. It's okay to hit tab/de-tab so long as your editor converts to spaces.
+
+(not a big deal, but) Braces: https://en.wikipedia.org/wiki/Indent_style#Variant:_Stroustrup
+
+Doesn't really matter how long lines are, just don't let it be absurd. If you do multi-line indentation indent headers one further, like so:
+if (X && B && C
+		&& C) {
+	code;
+	code;
+	code;
+}
+void myFun(int x, int y,
+		int z) {
+	code;
+	code;
+}
+
+Be liberal with spacing around operators, like so:
+int x = 1 + 2 + 3;
+
+If there are many parentheses, please be deliberate with spacing to make the meaning immediately clear, like so:
+my(2, favorite, language( is( lisp((std::string)"JKLOL"), nullptr ), 42 ))
+Alternatively, put this on multiple lines, like so in the extreme:
+my(
+	2,
+	favorite,
+	language(
+		is(
+			lisp( (std::string) "JKLOL" ),
+			nullptr
+		)
+	),
+	42
+)
+Or do whatever you think will make the confusing line most semantically clear :P
+	
+
+
+##### COMMENTS #####
+Add ones to explain what a function requires as input, what it outputs, abd what it generally does...
+Add ones to explain the purpose of a class
+Add ones to anything obscure. (like arcane variable names that aren't simple iterators)
+Add them to lengthy blocks of code that aren't immediately obvious as to their purpose or operation.
+Use //TODO: just for yourself as notes. If you need someone else to do something, tell them on Slack or in person.
+
+
+
+##### SOURCE CONTROL #####
+
+We're using git on GitHub: https://github.umn.edu/hildr039/SimplerThanWaldo
+
+### Commits ###
+
+# branching #
+
+Do as you will, although it is not necessary. You can just push straight to master, just reasonably deal with merges.
+
+# content #
+
+Just make sure every commit can compile. Otherwise it doesn't matter what you push if it's big, small, or even a little buggy. If there are a lot of
+types of changes in one commit, it's not a big deal. Try to seperate them if you can so it's easier to browse in the log what has been done.
+
+# messages #
+
+The commit title should be short and concise, preferrably in present tense. (e.g. Add style-guide.txt, Fix noise bug, Add XYZ algorithm to ABC process)
+
+The commit description can be largely whatever, preferrably list off what the commit adds in greater detail than the title. 
+(e.g. 1 - XYZ algorithm (link) to help ABC deal with problem JKLOL)

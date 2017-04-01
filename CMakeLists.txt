@@ -12,7 +12,8 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++14")
 endif()
 
-file(GLOB PROJECT_HEADERS Headers/*.hpp)
+file(GLOB PROJECT_HEADERS Headers/*.hpp
+                          Headers/*.h)
 file(GLOB PROJECT_SOURCES Sources/*.cpp)
 file(GLOB PROJECT_CONFIGS CMakeLists.txt
                           README.md

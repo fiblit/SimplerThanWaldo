@@ -22,15 +22,15 @@ variables -> camelCase or snake_case
 
 Doesn't really matter how long lines are, just don't let it be absurd. If you do multi-line indentation indent headers one further, like so:
 if (X && B && C
-		&& C) {
-	code;
-	code;
-	code;
+        && C) {
+    code;
+    code;
+    code;
 }
 void myFun(int x, int y,
-		int z) {
-	code;
-	code;
+        int z) {
+    code;
+    code;
 }
 
 Be liberal with spacing around operators, like so:
@@ -40,18 +40,18 @@ If there are many parentheses, please be deliberate with spacing to make the mea
 my(2, favorite, language( is( lisp((std::string)"JKLOL"), nullptr ), 42 ))
 Alternatively, put this on multiple lines, like so in the extreme:
 my(
-	2,
-	favorite,
-	language(
-		is(
-			lisp( (std::string) "JKLOL" ),
-			nullptr
-		)
-	),
-	42
+    2,
+    favorite,
+    language(
+        is(
+            lisp( (std::string) "JKLOL" ),
+            nullptr
+        )
+    ),
+    42
 )
 Or do whatever you think will make the confusing line most semantically clear :P
-	
+    
 
 
 ##### COMMENTS #####

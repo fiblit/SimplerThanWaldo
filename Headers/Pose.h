@@ -2,21 +2,53 @@
 #define POSE_H
 #pragma once
 
+#include <opencv2\opencv.hpp>
 #include <vector>
 #include <string>
 #include <unordered_map>
 
+const int NUMBONES = 10;
+enum bonenames { HEAD, TORSO, LUPARM, LLOARM, LUPLEG, LLOLEG, RUPARM, RLOARM, RUPLEG, RLOLEG };
+const int NUMJOINTS = 35;
+enum jointnames { HIP, LFEMUR, LTIBIA, LFOOT, LTOES, LTOES_END, RFEMUR, RTIBIA, RFOOT, RTOES,
+    RTOES_END, LOWERBACK, UPPERBACK, THORAX, LOWERNECK, UPPERNECK, HEAD, HEAD_END, CLAVICLE,
+    LHUMERUS, LRADIUS, LWRIST, LHAND, LFINGERS, LFINGERS_END, LTHUMB, LTHUMB_END, RHUMERUS,
+    RRADIUS, RWRIST, RHAND, RFINGERS, RFINGERS_END, RTHUMB, RTHUMB_END
+};
+
+struct Bone {
+    jointnames start;
+    jointnames end;
+    Bone(jointnames start, jointnames end) {
+        this->start = start;
+        this->end = end;
+    };
+};
+
 class Pose {
 public:
-    Pose(std::vector<std::string> names, std::vector<float[3]> positions);
+    Pose(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
     ~Pose();
-    const float* getJointPosition(std::string jointName);
-    std::vector<std::string> getJointNames();
-    std::vector<float[3]> getJointPositions();
+    const cv::Vec3f getJointPosition(jointnames joint);
+    //const cv::Vec3f getJointPosition(std::string jointName);
+    std::vector<Bone> getBones();
+    std::vector<cv::Vec3f> getJoints();
+
+    //should probably be in NN3D
+    cv::Mat getLocalInverse();
+    void normLocToHip();
+    cv::Mat getDescriptor();
 private:
-    std::vector<float[3]> positer;
-    std::vector<std::string> nameiter;
-    std::unordered_map<std::string, float *> joints;
+    std::vector<cv::Vec3f> filterJoints(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
+    std::vector<Bone> filterBones();
+
+    //these are ordered by their enumerators
+    //float is always float[3]
+    std::vector<cv::Vec3f> ordered_positions;
+    std::vector<Bone> ordered_bones;
+
+    bonenames strToBone(std::string name);
+    jointnames strToJoint(std::string name);
 };
 
 #endif//POSE_H

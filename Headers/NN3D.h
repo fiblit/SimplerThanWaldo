@@ -13,13 +13,13 @@ I may pre-read the poses so as to structure them into a spatial data-structure.
 I'll actually do this tomorrow morning. Been a bit busy.
 */
 
-//some "main" function that takes 2D points and gives back 3D points (i.e. a Pose)
-//points Pose is known to have z = 0, else it is assumed to be that :P
-//I will make a 2DPose class just for NN3D
-Pose extract3D(Pose points);
+//some "main" function that takes 2D points and gives back a Pose
+Pose extract3D(std::vector<std::string> labels, std::vector<cv::Point2f> points, std::string databasepath);
 //some projection function from 3D points to 2D Mat image
-cv::Mat project(Pose solution);
+cv::Mat reproject(Pose solution, cv::Mat camera);
 
-//TODO: everything else...
+//see jiang
+double comparePose(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
+double findANN(Pose p, std::string databasepath);
 
 #endif//NN3D_H

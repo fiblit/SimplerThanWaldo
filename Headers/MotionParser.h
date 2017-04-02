@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <vector>
+#include <opencv2/opencv.hpp>
 #include "Pose.h"
 
 // time does not matter to me, but most of these motion files were 120FPS, otherwise
@@ -28,7 +29,7 @@ private:
 
     void close();
     std::vector<std::string> getJointNames(std::string header);
-    std::vector<float[3]> getJointPositions(std::string line);
+    std::vector<cv::Vec3f> getJointPositions(std::string line);
 };
 
 #endif//MOTIONPARSER_H

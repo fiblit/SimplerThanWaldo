@@ -27,7 +27,9 @@ struct Bone {
 
 class Pose {
 public:
+    Pose();
     Pose(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
+    //I might need a copy constructor...
     ~Pose();
     const cv::Vec3f getJointPosition(jointnames joint);
     //const cv::Vec3f getJointPosition(std::string jointName);
@@ -38,17 +40,19 @@ public:
     cv::Mat getLocalInverse();
     void normLocToHip();
     cv::Mat getDescriptor();
+
+    bool isNull; // dumb, weird hack
 private:
     std::vector<cv::Vec3f> filterJoints(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
     std::vector<Bone> filterBones();
+
+    bonenames strToBone(std::string name);
+    jointnames strToJoint(std::string name);
 
     //these are ordered by their enumerators
     //float is always float[3]
     std::vector<cv::Vec3f> ordered_positions;
     std::vector<Bone> ordered_bones;
-
-    bonenames strToBone(std::string name);
-    jointnames strToJoint(std::string name);
 };
 
 #endif//POSE_H

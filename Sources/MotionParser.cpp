@@ -6,6 +6,7 @@
 
 // do not use outside of a .cpp or function
 using namespace std;
+using namespace cv;
 
 MotionParser::MotionParser(string path) {
     this->open(path);
@@ -24,8 +25,10 @@ void MotionParser::open(string path) {
 
 Pose MotionParser::getNextPose() {
     std::string line;
-    getline(this->currentFile, line);
-    return Pose(this->currentJointNames, this->getJointPositions(line));
+    if (getline(this->currentFile, line))
+        return Pose(this->currentJointNames, this->getJointPositions(line));
+    else
+        throw overflow_error("EOF");
 }
 
 vector<Pose> MotionParser::getAllPoses() {
@@ -67,15 +70,17 @@ vector<string> MotionParser::getJointNames(string header) {
     return names;
 }
 
-vector<float[3]> MotionParser::getJointPositions(string line) {
+vector<Vec3f> MotionParser::getJointPositions(string line) {
     vector<string> vals = split(line, ',');
-    vector<float[3]> positions;
+    vector<Vec3f> positions;
 
     for (int i = 0; i < vals.size(); i += 3) {
-        float pos[3] = {0 ,0, 0};// x y z (will this even work?, being static and all?)
+        float posf[3] = {0 ,0, 0};// x y z (will this even work?, being static and all?)
         for (int off = 0; off < 3; off++)
             if (vals[i + off] != "")
-                pos[off] = stof(vals[i + off]);
+                posf[off] = stof(vals[i + off]);
+
+        Vec3f pos = Vec3f(posf[0], posf[1], posf[2]);
         positions.push_back(pos);
     }
     

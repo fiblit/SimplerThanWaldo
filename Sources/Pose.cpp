@@ -7,6 +7,11 @@ using namespace cv;
 Pose::Pose(vector<string> names, vector<Vec3f> positions) {
     this->ordered_positions = this->filterJoints(names, positions);
     this->ordered_bones = this->filterBones();
+    isNull = true; // dumb, weird hack
+}
+
+Pose::Pose() {
+    isNull = false; // dumb, weird hack
 }
 
 Pose::~Pose() {
@@ -84,11 +89,14 @@ Mat Pose::getDescriptor() {
         Bone u = this->ordered_bones[i];
         Vec3f uk = this->ordered_positions[u.end] - this->ordered_positions[u.start];
 
-        //TODO: figure out how OpenCV wants me to do this :p
-        Vec3f vk = Ainv * (-uk);
+        //this is one spot where jiang's method simplifies things. Normalizing the torso's 
+        //orientation allows for the algorithm to ignore camera orientation relative to the person.
+        Mat vk = Ainv * Mat(-uk);
         vk = vk / sqrt(vk.dot(vk));
         for (int axis = 0; axis < 3; axis++)
-            descriptor[i + axis row] = vk.row(axis);
+            //I think this is what I wanted. OpenCV seems a little arcane at times
+            //at least for directly manipulating matrices.
+            descriptor.at<float>(i + axis, 1) = vk.at<float>(axis, 1);
     }
 
     return descriptor;

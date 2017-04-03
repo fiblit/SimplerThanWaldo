@@ -8,7 +8,8 @@
 #include <unordered_map>
 
 const int NUMBONES = 10;
-enum bonenames { HEAD, TORSO, LUPARM, LLOARM, LUPLEG, LLOLEG, RUPARM, RLOARM, RUPLEG, RLOLEG };
+//keep the bonenames such that the hierarchy is preserved: (parent before child)
+enum bonenames { TORSO, HEAD, LUPARM, LLOARM, LUPLEG, LLOLEG, RUPARM, RLOARM, RUPLEG, RLOLEG };
 const int NUMJOINTS = 35;
 enum jointnames { HIP, LFEMUR, LTIBIA, LFOOT, LTOES, LTOES_END, RFEMUR, RTIBIA, RFOOT, RTOES,
     RTOES_END, LOWERBACK, UPPERBACK, THORAX, LOWERNECK, UPPERNECK, HEAD, HEAD_END, CLAVICLE,
@@ -29,6 +30,11 @@ class Pose {
 public:
     Pose();
     Pose(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
+    
+    void jointInit(std::vector<jointnames> labels, std::vector<cv::Vec3f> positions);
+    Pose(std::vector<cv::Vec3f> positions);
+    Pose(std::vector<jointnames> labels, std::vector<cv::Vec3f> positions);
+
     //I might need a copy constructor...
     ~Pose();
     const cv::Vec3f getJointPosition(jointnames joint);
@@ -41,7 +47,6 @@ public:
     void normLocToHip();
     cv::Mat getDescriptor();
 
-    bool isNull; // dumb, weird hack
 private:
     std::vector<cv::Vec3f> filterJoints(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
     std::vector<Bone> filterBones();

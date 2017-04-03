@@ -1,10 +1,10 @@
 #include "NN3D.h"
 #include <experimental\filesystem>
+#include <bitset>
 
 using namespace std;
 using namespace cv;
 using namespace std::experimental::filesystem;
-
 
 //I'm pretty sure they all have the same length... but I might as well take the average.
 //also this should only ever need to be done once.
@@ -44,22 +44,67 @@ vector<double> getAvgBoneLength(string databasepath) {
 }
 
 //based on jiang
+//labels.size() MUST equal points.size()
 Pose extract3D(vector<jointnames> labels, vector<Point2f> points, string databasepath) {
+    //create 2D Pose
+    vector<Vec3f> points3D = vector<Vec3f>(points.size());
+    for (int i = 0; i < points.size(); i++)
+        //the hip should be at 0 depth
+        points3D[i] = Vec3f(points[i].x, points[i].y, 0);
+
+    Pose estimate2D = Pose(labels, points3D);
+
     //calculate bone lengths
     vector<double> bonelength = getAvgBoneLength(databasepath);
     //calculate orthographic scale, s
-    //s = max_k(sqrt(dx_k^2 - dy_k^2)/bonelength(k))
-    //calculate projected depth difference (dZ) of each point
-        //dZ_k^2 = (s*l_k)^2 - dx_k^2 - dy_k^2
-    //create Pose "final"
-    //mostSimilar = -inf
+    vector<Bone> bones2D = estimate2D.getBones();
+    vector<Vec3f> joints2D = estimate2D.getJoints();//different order than points3D
+    double s = 1;
+    for (int k = 0; k < NUMBONES; k++) {
+        Vec3f start = joints2D[bones2D[k].start];
+        Vec3f end = joints2D[bones2D[k].end];
+        double dx = end[0] - start[0];
+        double dy = end[1] - start[1];
+        //I don't know what jiang was doing, but I'm 95% sure this is wrong.
+        //Shouldn't it by dx^2 PLUS dy^2 ? There's no way minus makes sense...
+        s = max(s, sqrt(dx*dx + dy*dy) / bonelength[k]);
+    }
+
+    //calculate projected depth difference (dZ) of each endpoint
+    //these aren't bones
+    vector<double> depthDiff = vector<double>(NUMBONES);
+    for (int k = 0; k < NUMBONES; k++) {
+        double scaledLen = s*bonelength[k];
+        Vec3f start = joints2D[bones2D[k].start];
+        Vec3f end = joints2D[bones2D[k].end];
+        double dx = end[0] - start[0];
+        double dy = end[1] - start[1];
+        depthDiff[k] = sqrt(scaledLen*scaledLen - dx*dx - dy*dy);
+    }
+   
+    Pose final;
+    double mostSimilar = numeric_limits<double>::lowest();
     //for each possible flipping of the points' 3D coordinates signs
-        //create Pose "guess"
-        //similarity = findANN(guess, DB)
-        //if similarity > mostSimilar
-            //final = guess
-            //mostSimilar = similarity
-    //return final
+    //a bit-level 0 means negative, a 1 means positive
+    for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << NUMBONES); boneDepthSign++) {
+        vector<Vec3f> guessPositions = joints2D;
+        vector<Bone> guessBones = bones2D;
+        for (int k = 0; k < NUMBONES; k++) {
+            bool sign = bitset<NUMBONES>(boneDepthSign)[k];
+            //the bonenames are ordered in such a way that this will work fine
+            //end.z = (sign)dZ + start.z
+            guessPositions[guessBones[k].end][2] = (sign ? 1 : -1) * depthDiff[k] + guessPositions[guessBones[k].start][2];
+        }
+
+        Pose guess(guessPositions);
+        double similarity = findANN(guess, databasepath);
+        if (similarity > mostSimilar) {
+            final = guess;
+            mostSimilar = similarity;
+        }
+    }
+
+    return final;
 }
 
 Mat reproject(Pose solution, Mat camera) {

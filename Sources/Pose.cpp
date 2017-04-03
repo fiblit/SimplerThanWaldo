@@ -7,11 +7,31 @@ using namespace cv;
 Pose::Pose(vector<string> names, vector<Vec3f> positions) {
     this->ordered_positions = this->filterJoints(names, positions);
     this->ordered_bones = this->filterBones();
-    isNull = true; // dumb, weird hack
 }
 
 Pose::Pose() {
-    isNull = false; // dumb, weird hack
+}
+
+
+void Pose::jointInit(vector<jointnames> labels, vector<Vec3f> positions) {
+    if (labels.size() != positions.size())
+        throw runtime_error("must be equal joints");
+
+    this->ordered_positions = vector<Vec3f>(NUMJOINTS);
+    for (int i = 0; i < labels.size(); i++)
+        ordered_positions[labels[i]] = positions[i];
+    this->ordered_bones = this->filterBones();
+}
+
+Pose::Pose(vector<jointnames> labels, vector<Vec3f> positions) {
+    this->jointInit(labels, positions);
+}
+
+Pose::Pose(vector<Vec3f> positions) {
+    vector<jointnames> labels = vector<jointnames>(NUMJOINTS);
+    for (int i = 0; i < NUMJOINTS; i++)
+        labels[i] = (jointnames)i;
+    this->jointInit(labels, positions);
 }
 
 Pose::~Pose() {
@@ -24,7 +44,6 @@ vector<Vec3f> Pose::filterJoints(vector<string> names, vector<Vec3f> positions) 
         throw runtime_error("must be equal joints");
 
     vector<Vec3f> filteredPositions = vector<Vec3f>(NUMJOINTS);
-
     for (int i = 0; i < names.size(); i++) {
         jointnames currentJoint;
         try {
@@ -35,7 +54,6 @@ vector<Vec3f> Pose::filterJoints(vector<string> names, vector<Vec3f> positions) 
         }
         filteredPositions[currentJoint] = positions[i];
     }
-
     return filteredPositions;
 }
 

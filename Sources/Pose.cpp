@@ -96,7 +96,7 @@ Mat Pose::getLocalInverse() {
 //to compare how close two descriptors are, you simply take the dot product of them.
 //the closer this value is to ... NUMBONES=10, the better. (since there are NUMBONES unit vectors)
 Mat Pose::getDescriptor() {
-    Mat descriptor = Mat(3 * bonenames::NUMBONES, 1, CV_64F);
+    Mat descriptor = Mat(3 * bonenames::NUMBONES, 1, CV_32F);
 
     //the math says this may be unnecessary.
     this->normLocToHip();
@@ -114,7 +114,7 @@ Mat Pose::getDescriptor() {
         for (int axis = 0; axis < 3; axis++)
             //I think this is what I wanted. OpenCV seems a little arcane at times
             //at least for directly manipulating matrices.
-            descriptor.at<float>(i + axis, 1) = vk.at<float>(axis, 1);
+            descriptor.at<float>(i + axis, 0) = vk.at<float>(axis, 0);
     }
 
     return descriptor;

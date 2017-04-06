@@ -23,9 +23,9 @@ namespace jointnames {
 }
 
 struct Bone {
-    int/*jn*/ start;
-    int/*jn*/ end;
-    Bone() { start = 0; end = 0;}
+    jointnames::jointnames start;
+    jointnames::jointnames end;
+    Bone() { start = (jointnames::jointnames)0; end = (jointnames::jointnames)0;}
     Bone(jointnames::jointnames start, jointnames::jointnames end) {
         this->start = start;
         this->end = end;
@@ -37,9 +37,9 @@ public:
     Pose();
     Pose(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
     
-    void jointInit(std::vector<int/*jn*/> labels, std::vector<cv::Vec3f> positions);
+    void jointInit(std::vector<jointnames::jointnames> labels, std::vector<cv::Vec3f> positions);
     Pose(std::vector<cv::Vec3f> positions);
-    Pose(std::vector<int/*jn*/> labels, std::vector<cv::Vec3f> positions);
+    Pose(std::vector<jointnames::jointnames> labels, std::vector<cv::Vec3f> positions);
 
     //I might need a copy constructor...
     ~Pose();

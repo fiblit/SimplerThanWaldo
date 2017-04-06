@@ -45,7 +45,7 @@ vector<double> getAvgBoneLength(string databasepath) {
 
 //based on jiang
 //labels.size() MUST equal points.size()
-Pose extract3D(vector<int/*jn*/> labels, vector<Point2f> points, string databasepath) {
+Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, string databasepath) {
     //create 2D Pose
     vector<Vec3f> points3D = vector<Vec3f>(points.size());
     for (int i = 0; i < points.size(); i++)

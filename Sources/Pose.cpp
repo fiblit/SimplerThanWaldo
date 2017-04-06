@@ -13,7 +13,7 @@ Pose::Pose() {
 }
 
 
-void Pose::jointInit(vector<int/*jn*/> labels, vector<Vec3f> positions) {
+void Pose::jointInit(vector<jointnames::jointnames> labels, vector<Vec3f> positions) {
     if (labels.size() != positions.size())
         throw runtime_error("must be equal joints");
 
@@ -23,12 +23,12 @@ void Pose::jointInit(vector<int/*jn*/> labels, vector<Vec3f> positions) {
     this->ordered_bones = this->filterBones();
 }
 
-Pose::Pose(vector<int/*jointnames::jointnT*/> labels, vector<Vec3f> positions) {
+Pose::Pose(vector<jointnames::jointnames> labels, vector<Vec3f> positions) {
     this->jointInit(labels, positions);
 }
 
 Pose::Pose(vector<Vec3f> positions) {
-    vector<int/*jn*/> labels = vector<int/*jn*/>(jointnames::NUMJOINTS);
+    vector<jointnames::jointnames> labels = vector<jointnames::jointnames>(jointnames::NUMJOINTS);
     for (int i = 0; i < jointnames::NUMJOINTS; i++)
         labels[i] = (jointnames::jointnames)i;
     this->jointInit(labels, positions);

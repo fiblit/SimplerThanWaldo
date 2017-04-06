@@ -107,7 +107,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     return final;
 }
 
-Mat reproject(Pose solution, Mat camera) {
+Mat reproject(Pose solution, Mat camera, int outW, int outH) {
     //draw each bone as a projected line using the camera matrix as the projection
     //undoubtedly need more parameters, I'm just lazy.
     //The resulting mat is a 2D image. Should probably just be the projected space of

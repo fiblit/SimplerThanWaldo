@@ -14,9 +14,9 @@ I'll actually do this tomorrow morning. Been a bit busy.
 */
 
 //some "main" function that takes 2D points and gives back a Pose
-Pose extract3D(std::vector<std::string> labels, std::vector<cv::Point2f> points, std::string databasepath);
+Pose extract3D(std::vector<jointnames::jointnames> labels, std::vector<cv::Point2f> points, std::string databasepath);
 //some projection function from 3D points to 2D Mat image
-cv::Mat reproject(Pose solution, cv::Mat camera);
+cv::Mat reproject(Pose solution, cv::Mat virtualCamera, int outW, int outH);
 
 //see jiang
 double comparePose(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);

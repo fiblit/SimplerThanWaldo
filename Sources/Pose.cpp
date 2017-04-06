@@ -13,24 +13,24 @@ Pose::Pose() {
 }
 
 
-void Pose::jointInit(vector<jointnames> labels, vector<Vec3f> positions) {
+void Pose::jointInit(vector<int/*jn*/> labels, vector<Vec3f> positions) {
     if (labels.size() != positions.size())
         throw runtime_error("must be equal joints");
 
-    this->ordered_positions = vector<Vec3f>(NUMJOINTS);
+    this->ordered_positions = vector<Vec3f>(jointnames::NUMJOINTS);
     for (int i = 0; i < labels.size(); i++)
         ordered_positions[labels[i]] = positions[i];
     this->ordered_bones = this->filterBones();
 }
 
-Pose::Pose(vector<jointnames> labels, vector<Vec3f> positions) {
+Pose::Pose(vector<int/*jointnames::jointnT*/> labels, vector<Vec3f> positions) {
     this->jointInit(labels, positions);
 }
 
 Pose::Pose(vector<Vec3f> positions) {
-    vector<jointnames> labels = vector<jointnames>(NUMJOINTS);
-    for (int i = 0; i < NUMJOINTS; i++)
-        labels[i] = (jointnames)i;
+    vector<int/*jn*/> labels = vector<int/*jn*/>(jointnames::NUMJOINTS);
+    for (int i = 0; i < jointnames::NUMJOINTS; i++)
+        labels[i] = (jointnames::jointnames)i;
     this->jointInit(labels, positions);
 }
 
@@ -43,13 +43,13 @@ vector<Vec3f> Pose::filterJoints(vector<string> names, vector<Vec3f> positions) 
     if (names.size() != positions.size())
         throw runtime_error("must be equal joints");
 
-    vector<Vec3f> filteredPositions = vector<Vec3f>(NUMJOINTS);
+    vector<Vec3f> filteredPositions = vector<Vec3f>(jointnames::NUMJOINTS);
     for (int i = 0; i < names.size(); i++) {
-        jointnames currentJoint;
+        jointnames::jointnames currentJoint;
         try {
             currentJoint = this->strToJoint(names[i]);
         }
-        catch (domain_error& d) {
+        catch (domain_error&) {
             continue;
         }
         filteredPositions[currentJoint] = positions[i];
@@ -58,45 +58,45 @@ vector<Vec3f> Pose::filterJoints(vector<string> names, vector<Vec3f> positions) 
 }
 
 vector<Bone> Pose::filterBones() {
-    vector<Bone> filteredBones = vector<Bone>(NUMBONES);
+    vector<Bone> filteredBones = vector<Bone>(bonenames::NUMBONES);
 
-    filteredBones[bonenames::HEAD] = Bone(CLAVICLE, HEAD_END);
-    filteredBones[TORSO] = Bone(HIP, CLAVICLE);
-    filteredBones[LUPARM] = Bone(LHUMERUS, LRADIUS);
-    filteredBones[LLOARM] = Bone(LRADIUS, LWRIST);
-    filteredBones[LUPLEG] = Bone(LFEMUR, LTIBIA);
-    filteredBones[LLOLEG] = Bone(LTIBIA, LFOOT);
-    filteredBones[RUPARM] = Bone(RHUMERUS, RRADIUS);
-    filteredBones[RLOARM] = Bone(RRADIUS, RWRIST);
-    filteredBones[RUPLEG] = Bone(RFEMUR, RTIBIA);
-    filteredBones[RLOLEG] = Bone(RTIBIA, RFOOT);
+    filteredBones[bonenames::HEAD] = Bone(jointnames::CLAVICLE, jointnames::HEAD_END);
+    filteredBones[bonenames::TORSO] = Bone(jointnames::HIP, jointnames::CLAVICLE);
+    filteredBones[bonenames::LUPARM] = Bone(jointnames::LHUMERUS, jointnames::LRADIUS);
+    filteredBones[bonenames::LLOARM] = Bone(jointnames::LRADIUS, jointnames::LWRIST);
+    filteredBones[bonenames::LUPLEG] = Bone(jointnames::LFEMUR, jointnames::LTIBIA);
+    filteredBones[bonenames::LLOLEG] = Bone(jointnames::LTIBIA, jointnames::LFOOT);
+    filteredBones[bonenames::RUPARM] = Bone(jointnames::RHUMERUS, jointnames::RRADIUS);
+    filteredBones[bonenames::RLOARM] = Bone(jointnames::RRADIUS, jointnames::RWRIST);
+    filteredBones[bonenames::RUPLEG] = Bone(jointnames::RFEMUR, jointnames::RTIBIA);
+    filteredBones[bonenames::RLOLEG] = Bone(jointnames::RTIBIA, jointnames::RFOOT);
 
     return filteredBones;
 }
 
 void Pose::normLocToHip() {
     for (int i = 0; i < this->ordered_positions.size(); i++)
-        this->ordered_positions[i] -= this->ordered_positions[HIP];
+        this->ordered_positions[i] -= this->ordered_positions[jointnames::HIP];
 }
 
-// see jiang "A" matrix
+// see jiang "A" matrixB
 Mat Pose::getLocalInverse() {
-    Vec3f temp_xAxis = this->ordered_positions[LFEMUR] - this->ordered_positions[HIP];
-    Vec3f yAxis = this->ordered_positions[LOWERBACK] - this->ordered_positions[HIP];
+    Vec3f temp_xAxis = this->ordered_positions[jointnames::LFEMUR] - this->ordered_positions[jointnames::HIP];
+    Vec3f yAxis = this->ordered_positions[jointnames::LOWERBACK] - this->ordered_positions[jointnames::HIP];
     Vec3f zAxis = temp_xAxis.cross(yAxis);
     Vec3f xAxis = yAxis.cross(zAxis);
 
     //Ainv
-    return (Mat_<double>(3,3)
-        << xAxis.row(0), xAxis.row(1), xAxis.row(2),
-           yAxis.row(0), yAxis.row(1), yAxis.row(2),
-           zAxis.row(0), zAxis.row(1), zAxis.row(2));
+    return (Mat_<float>(3,3)
+        << *xAxis.row(0).val, *xAxis.row(1).val, *xAxis.row(2).val,
+           *yAxis.row(0).val, *yAxis.row(1).val, *yAxis.row(2).val,
+           *zAxis.row(0).val, *zAxis.row(1).val, *zAxis.row(2).val);
 }
 //see jiang Vk descriptor
 //to compare how close two descriptors are, you simply take the dot product of them.
 //the closer this value is to ... NUMBONES=10, the better. (since there are NUMBONES unit vectors)
 Mat Pose::getDescriptor() {
-    Mat descriptor = Mat(3 * NUMBONES, 1, CV_64F);
+    Mat descriptor = Mat(3 * bonenames::NUMBONES, 1, CV_64F);
 
     //the math says this may be unnecessary.
     this->normLocToHip();
@@ -127,7 +127,7 @@ vector<Vec3f> Pose::getJoints() {
 vector<Bone> Pose::getBones() {
     return this->ordered_bones;
 }
-const Vec3f Pose::getJointPosition(jointnames joint) {
+const Vec3f Pose::getJointPosition(jointnames::jointnames joint) {
     return this->ordered_positions[joint];
 }
 /*
@@ -139,7 +139,7 @@ const Vec3f Pose::getJointPosition(string jointName) {
 */
 
 //enum converters
-bonenames Pose::strToBone(std::string name) {
+bonenames::bonenames Pose::strToBone(std::string name) {
     transform(name.begin(), name.end(), name.begin(), ::tolower);
 
     if      (name == "head")      return bonenames::HEAD;
@@ -154,7 +154,7 @@ bonenames Pose::strToBone(std::string name) {
     else if (name == "rloleg")    return bonenames::RLOLEG;
     else                          throw domain_error("invalid bone name");
 }
-jointnames Pose::strToJoint(std::string name) {
+jointnames::jointnames Pose::strToJoint(std::string name) {
     transform(name.begin(), name.end(), name.begin(), ::tolower);
 
     //ignore root

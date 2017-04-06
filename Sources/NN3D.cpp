@@ -9,9 +9,9 @@ using namespace std::experimental::filesystem;
 //I'm pretty sure they all have the same length... but I might as well take the average.
 //also this should only ever need to be done once.
 vector<double> getAvgBoneLength(string databasepath) {
-    vector<double> runningAvg = vector<double>(NUMBONES);
+    vector<double> runningAvg = vector<double>(bonenames::NUMBONES);
     int poseCount = 0;
-    for (int i = 0; i < NUMBONES; i++)
+    for (int i = 0; i < bonenames::NUMBONES; i++)
         runningAvg[i] = 0;
 
     //while there are motion files
@@ -25,13 +25,13 @@ vector<double> getAvgBoneLength(string databasepath) {
             try {
                 current = currentMotion.getNextPose();
             }
-            catch (overflow_error& e) {
+            catch (overflow_error&) {
                 break;
             }
 
             vector<Bone> bones = current.getBones();
             vector<Vec3f> joints = current.getJoints();
-            for (int i = 0; i < NUMBONES; i++) {
+            for (int i = 0; i < bonenames::NUMBONES; i++) {
                 Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
                 double len = sqrt(diff.dot(diff));
                 runningAvg[i] = (len + poseCount * runningAvg[i]) / (poseCount + 1);
@@ -45,14 +45,14 @@ vector<double> getAvgBoneLength(string databasepath) {
 
 //based on jiang
 //labels.size() MUST equal points.size()
-Pose extract3D(vector<jointnames> labels, vector<Point2f> points, string databasepath) {
+Pose extract3D(vector<int/*jn*/> labels, vector<Point2f> points, string databasepath) {
     //create 2D Pose
     vector<Vec3f> points3D = vector<Vec3f>(points.size());
     for (int i = 0; i < points.size(); i++)
         //the hip should be at 0 depth
         points3D[i] = Vec3f(points[i].x, points[i].y, 0);
 
-    Pose estimate2D = Pose(labels, points3D);
+    Pose estimate2D(labels, points3D);
 
     //calculate bone lengths
     vector<double> bonelength = getAvgBoneLength(databasepath);
@@ -60,7 +60,7 @@ Pose extract3D(vector<jointnames> labels, vector<Point2f> points, string databas
     vector<Bone> bones2D = estimate2D.getBones();
     vector<Vec3f> joints2D = estimate2D.getJoints();//different order than points3D
     double s = 1;
-    for (int k = 0; k < NUMBONES; k++) {
+    for (int k = 0; k < bonenames::NUMBONES; k++) {
         Vec3f start = joints2D[bones2D[k].start];
         Vec3f end = joints2D[bones2D[k].end];
         double dx = end[0] - start[0];
@@ -72,8 +72,8 @@ Pose extract3D(vector<jointnames> labels, vector<Point2f> points, string databas
 
     //calculate projected depth difference (dZ) of each endpoint
     //these aren't bones
-    vector<double> depthDiff = vector<double>(NUMBONES);
-    for (int k = 0; k < NUMBONES; k++) {
+    vector<double> depthDiff = vector<double>(bonenames::NUMBONES);
+    for (int k = 0; k < bonenames::NUMBONES; k++) {
         double scaledLen = s*bonelength[k];
         Vec3f start = joints2D[bones2D[k].start];
         Vec3f end = joints2D[bones2D[k].end];
@@ -86,14 +86,14 @@ Pose extract3D(vector<jointnames> labels, vector<Point2f> points, string databas
     double mostSimilar = numeric_limits<double>::lowest();
     //for each possible flipping of the points' 3D coordinates signs
     //a bit-level 0 means negative, a 1 means positive
-    for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << NUMBONES); boneDepthSign++) {
+    for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << bonenames::NUMBONES); boneDepthSign++) {
         vector<Vec3f> guessPositions = joints2D;
         vector<Bone> guessBones = bones2D;
-        for (int k = 0; k < NUMBONES; k++) {
-            bool sign = bitset<NUMBONES>(boneDepthSign)[k];
+        for (int k = 0; k < bonenames::NUMBONES; k++) {
+            bool sign = bitset<bonenames::NUMBONES>(boneDepthSign)[k];
             //the bonenames are ordered in such a way that this will work fine
             //end.z = (sign)dZ + start.z
-            guessPositions[guessBones[k].end][2] = (sign ? 1 : -1) * depthDiff[k] + guessPositions[guessBones[k].start][2];
+            guessPositions[guessBones[k].end][2] = static_cast<float>((sign ? 1 : -1) * depthDiff[k] + guessPositions[guessBones[k].start][2]);
         }
 
         Pose guess(guessPositions);
@@ -112,6 +112,7 @@ Mat reproject(Pose solution, Mat camera) {
     //undoubtedly need more parameters, I'm just lazy.
     //The resulting mat is a 2D image. Should probably just be the projected space of
     //the pose, and another function should actually draw it.
+    return Mat();
 }
 
 //the closer to NUMBONES (i.e. the larger) the better.
@@ -135,7 +136,7 @@ double findANN(Pose guess, string databasepath) {
             try {
                 actual = currentMotion.getNextPose();
             }
-            catch (overflow_error& e) {
+            catch (overflow_error&) {
                 break;
             }
 

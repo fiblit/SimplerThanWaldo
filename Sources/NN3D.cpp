@@ -6,46 +6,77 @@ using namespace std;
 using namespace cv;
 using namespace std::experimental::filesystem;
 
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
+
+//TODO: also return meta information(like avg bone lengths)/an actual class/struct for the DB
+MotionDB createDB(string path) {
+    vector<Pose> db;
+    //while there are motion files
+    cout << "i/o start" << endl;
+    auto t1 = Clock::now();
+    for (auto &p : recursive_directory_iterator(path)) {
+        MotionParser mp;
+        //load file into MotionParser
+        if (!is_directory(p.path())) {
+            mp.open(p.path().string());
+            while (true) {
+                Pose current;
+                try {
+                    current = mp.getNextPose();
+                }
+                catch (overflow_error&) {
+                    break;
+                }
+                db.push_back(current);
+            }
+        }
+    }
+    auto t2 = Clock::now();
+    cout << "i/o"
+        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
+        << endl;
+
+    return db;
+}
+
 //I'm pretty sure they all have the same length... but I might as well take the average.
 //also this should only ever need to be done once.
-vector<double> getAvgBoneLength(string databasepath) {
+vector<double> getAvgBoneLength(MotionDB db) {
     vector<double> runningAvg = vector<double>(bonenames::NUMBONES);
     int poseCount = 0;
     for (int i = 0; i < bonenames::NUMBONES; i++)
         runningAvg[i] = 0;
 
-    //while there are motion files
-    for (auto &p : recursive_directory_iterator(databasepath)) {
-        //load file into a MotionParser
-        MotionParser currentMotion(p.path().filename().string());
-
-        //for each pose in currentMotion
-        while (true) {
-            Pose current;
-            try {
-                current = currentMotion.getNextPose();
-            }
-            catch (overflow_error&) {
-                break;
-            }
-
-            vector<Bone> bones = current.getBones();
-            vector<Vec3f> joints = current.getJoints();
-            for (int i = 0; i < bonenames::NUMBONES; i++) {
-                Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
-                double len = sqrt(diff.dot(diff));
-                runningAvg[i] = (len + poseCount * runningAvg[i]) / (poseCount + 1);
-            }
-            poseCount++;
+    auto t1 = Clock::now();
+    //while there are poses
+    for (Pose p : db) {
+        vector<Bone> bones = p.getBones();
+        vector<Vec3f> joints = p.getJoints();
+        for (int i = 0; i < bonenames::NUMBONES; i++) {
+            Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
+            double len = sqrt(diff.dot(diff));
+            runningAvg[i] = (len + poseCount * runningAvg[i]) / (poseCount + 1);
         }
+        poseCount++;
     }
+    auto t2 = Clock::now();
+    cout << "search"
+        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
+        << endl;
 
     return runningAvg;
 }
 
+
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
+
 //based on jiang
 //labels.size() MUST equal points.size()
-Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, string databasepath) {
+Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, string dbpath) {
+    MotionDB db = createDB(dbpath);
+
     //create 2D Pose
     vector<Vec3f> points3D = vector<Vec3f>(points.size());
     for (int i = 0; i < points.size(); i++)
@@ -55,10 +86,21 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     Pose estimate2D(labels, points3D);
 
     //calculate bone lengths
-    vector<double> bonelength = getAvgBoneLength(databasepath);
+
+    cout << "d0" << endl;
+    auto t0 = Clock::now();
+    vector<double> bonelength = getAvgBoneLength(db);
     //calculate orthographic scale, s
+    auto t1 = Clock::now();
+    cout << "d1 in " 
+        << chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count() / 1000000000.
+        << endl;
     vector<Bone> bones2D = estimate2D.getBones();
     vector<Vec3f> joints2D = estimate2D.getJoints();//different order than points3D
+    auto t2 = Clock::now();
+    cout << "d2 in " 
+        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
+        << endl;
     double s = 1;
     for (int k = 0; k < bonenames::NUMBONES; k++) {
         Vec3f start = joints2D[bones2D[k].start];
@@ -69,6 +111,11 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         //Shouldn't it by dx^2 PLUS dy^2 ? There's no way minus makes sense...
         s = max(s, sqrt(dx*dx + dy*dy) / bonelength[k]);
     }
+
+    auto t3 = Clock::now();
+    cout << "d3 in " 
+        << chrono::duration_cast<chrono::nanoseconds>(t3 - t2).count() / 1000000000.
+        << endl;
 
     //calculate projected depth difference (dZ) of each endpoint
     //these aren't bones
@@ -82,6 +129,11 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         depthDiff[k] = sqrt(scaledLen*scaledLen - dx*dx - dy*dy);
     }
    
+    auto t4 = Clock::now();
+    cout << "d4 in " 
+        << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
+        << endl;
+
     Pose final;
     double mostSimilar = numeric_limits<double>::lowest();
     //for each possible flipping of the points' 3D coordinates signs
@@ -97,13 +149,17 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         }
 
         Pose guess(guessPositions);
-        double similarity = findANN(guess, databasepath);
+        double similarity = findANN(guess, db);
         if (similarity > mostSimilar) {
             final = guess;
             mostSimilar = similarity;
         }
     }
 
+    auto f = Clock::now();
+    cout << "f in " 
+        << chrono::duration_cast<chrono::nanoseconds>(f - t4).count() / 1000000000.
+        << endl;
     return final;
 }
 
@@ -121,32 +177,30 @@ double comparePose(Mat poseDescriptor1, Mat poseDescriptor2) {
 }
 
 //not actually *approximate* yet. I was going to read some locality-sensitive hashing stuff for that.
-double findANN(Pose guess, string databasepath) {
+double findANN(Pose guess, MotionDB db) {
+
+   // auto t1 = Clock::now();
     double closest = numeric_limits<double>::lowest();
     Mat guessDesc = guess.getDescriptor();
 
     //while there are motion files
-    for (auto &p: recursive_directory_iterator(databasepath)) {
-        //load file into a MotionParser
-        MotionParser currentMotion(p.path().filename().string());
+    for (Pose p : db) {
+    //    auto t1 = Clock::now();
+        // get pose descriptor for current pose
+        Mat actualDesc = p.getDescriptor();
 
-        //for each pose in currentMotion
-        while (true) {
-            Pose actual;
-            try {
-                actual = currentMotion.getNextPose();
-            }
-            catch (overflow_error&) {
-                break;
-            }
-
-            // get pose descriptor for current pose
-            Mat actualDesc = actual.getDescriptor();
-
-            //nearest neighbour's distance; jiang's method doesn't care what the real pose looks like.
-            //His method just cares that the guessed pose is close to a real pose.
-            closest = max(closest, comparePose(guessDesc, actualDesc));
-        }
+        //nearest neighbour's distance; jiang's method doesn't care what the real pose looks like.
+        //His method just cares that the guessed pose is close to a real pose.
+        closest = max(closest, comparePose(guessDesc, actualDesc));
+     //   auto t2 = Clock::now();;
+     //   cout << "\tNNcomp in "
+     //       << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
+    //        << endl;
     }
+
+    //auto t2 = Clock::now();
+   // cout << "NN in "
+    //    << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
+    //    << endl;
     return closest;
 }

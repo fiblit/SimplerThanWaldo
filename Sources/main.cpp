@@ -6,10 +6,13 @@ TODO replace all code with the actual main. ATM this is just a junk file.
 
 #include <iostream>
 #include <string>
+#include <chrono>
 
 //only use this in .cpp or functions
 using namespace cv;
 using namespace std;
+
+typedef std::chrono::high_resolution_clock Clock;
 
 #include "NN3D.h"
 
@@ -36,15 +39,23 @@ int main(int argc, char** argv) {
 
     string databasepath = "E:/djdjh/Documents/Classes/Research/allasfamc/all_asfamc/csvpose";
 
+    cout << "initialization complete" << endl;
+
+    auto t1 = Clock::now();
     //obtain Pose
     Pose solution = extract3D(labels, points, databasepath);
+    auto t2 = Clock::now();
+
+    cout << "solution found in " 
+         << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()/1000000000.
+         << "s" << endl;
 
     //temporary debug output
     vector<Vec3f> outJoints = solution.getJoints();
     vector<Bone> outBones = solution.getBones();
     for (int k = 0; k < outBones.size(); k++) {
         cout << "start: " << outJoints[outBones[k].start];
-        cout << "  end: " << outJoints[outBones[k].end] << "\n";
+        cout << "  end: " << outJoints[outBones[k].end] << endl;
     }
 
 /*
@@ -55,8 +66,15 @@ int main(int argc, char** argv) {
     Mat out = reproject(solution, virtualCamera, outW, outH);
     namedWindow("3D Pose", WINDOW_AUTOSIZE);
     imshow("3D Pose", out);
-    waitKey(0);
 */
+    cout << "\n DONE \n" << flush;
+    waitKey(0);
+    cout << "\n!\n";
+    waitKey(0);
+    cout << "\n!\n" << flush;
+    waitKey(0);
+    cout << "\n!\n" << flush;
+
 }
 
 int test(int argc, char** argv) {

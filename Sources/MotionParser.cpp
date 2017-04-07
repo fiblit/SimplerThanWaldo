@@ -8,6 +8,10 @@
 using namespace std;
 using namespace cv;
 
+MotionParser::MotionParser() {
+    this->currentFile = ifstream();
+    this->currentJointNames = vector<string>();
+}
 MotionParser::MotionParser(string path) {
     this->open(path);
 }
@@ -74,7 +78,7 @@ vector<Vec3f> MotionParser::getJointPositions(string line) {
     vector<string> vals = split(line, ',');
     vector<Vec3f> positions;
 
-    for (int i = 0; i < vals.size(); i += 3) {
+    for (int i = 0; i+2 < vals.size(); i += 3) {
         float posf[3] = {0 ,0, 0};// x y z (will this even work?, being static and all?)
         for (int off = 0; off < 3; off++)
             if (vals[i + off] != "")

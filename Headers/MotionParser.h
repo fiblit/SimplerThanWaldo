@@ -16,7 +16,7 @@
 
 class MotionParser {
 public:
-    //MotionParser();
+    MotionParser();
     MotionParser(std::string path);
     ~MotionParser();
 

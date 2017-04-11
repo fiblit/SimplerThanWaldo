@@ -14,6 +14,12 @@
 // x-val, y-val, z-val, ...
 // ..., ..., ..., ...
 
+
+struct MotionDB {
+    std::vector<cv::Mat> descs;
+    std::vector<double> avgBoneLength;
+};
+
 class MotionParser {
 public:
     MotionParser();
@@ -23,6 +29,9 @@ public:
     void open(std::string path);
     Pose getNextPose();
     std::vector<Pose> getAllPoses();
+    std::vector<cv::Mat> getAllPoseDescriptors();
+    MotionDB getMiniMotionDB();
+    MotionDB mergeMotionDB(MotionDB db1, MotionDB db2);
 private:
     std::ifstream currentFile;
     std::vector<std::string> currentJointNames;
@@ -31,5 +40,7 @@ private:
     std::vector<std::string> getJointNames(std::string header);
     std::vector<cv::Vec3f> getJointPositions(std::string line);
 };
+
+std::vector<std::string> split(std::string s, char delim);
 
 #endif//MOTIONPARSER_H

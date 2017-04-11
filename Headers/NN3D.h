@@ -13,7 +13,7 @@ I may pre-read the poses so as to structure them into a spatial data-structure.
 I'll actually do this tomorrow morning. Been a bit busy.
 */
 
-typedef std::vector<Pose> MotionDB;
+
 MotionDB createDB(std::string databasepath);
 
 //some "main" function that takes 2D points and gives back a Pose

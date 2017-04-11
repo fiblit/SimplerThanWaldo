@@ -35,11 +35,66 @@ Pose MotionParser::getNextPose() {
         throw overflow_error("EOF");
 }
 
+MotionDB MotionParser::getMiniMotionDB() {
+    MotionDB mini_db;
+
+    mini_db.avgBoneLength = vector<double>(bonenames::NUMBONES, 0.0);
+    int poseCount = 0;
+    
+    string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
+    vector<string> lines = split(file, '\n');
+    mini_db.descs = vector<Mat>(lines.size());
+    
+    //for each pose
+    for (int i = 0; i < lines.size(); i++) {
+        Pose p = Pose(this->currentJointNames, this->getJointPositions(lines[i]));
+        mini_db.descs[i] = p.getDescriptor();
+
+        vector<Bone> bones = p.getBones();
+        vector<Vec3f> joints = p.getJoints();
+        for (int i = 0; i < bonenames::NUMBONES; i++) {
+            Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
+            double len = sqrt(diff.dot(diff));
+            mini_db.avgBoneLength[i] = (len + poseCount * mini_db.avgBoneLength[i]) / (poseCount + 1);
+        }
+        poseCount++;
+    }
+
+    return mini_db;
+}
+
+MotionDB MotionParser::mergeMotionDB(MotionDB db1, MotionDB db2) {
+    MotionDB db;
+    db.descs = vector<Mat>();
+    //I hope these next two aren't super slow...
+    //ideally they are replaced by a kd-tree
+    db.descs.insert(db.descs.end(), db1.descs.begin(), db1.descs.end());
+    db.descs.insert(db.descs.end(), db2.descs.begin(), db2.descs.end());
+
+    for (int i = 0; i < bonenames::NUMBONES; i++)
+        db.avgBoneLength[i] = 
+            (db1.avgBoneLength[i] * db1.descs.size() + db2.avgBoneLength[i] * db2.descs.size()) 
+            / (db1.descs.size() + db2.descs.size());
+
+    return db;
+}
+
+vector<Mat> MotionParser::getAllPoseDescriptors() {
+    string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
+    vector<string> lines = split(file, '\n');
+    vector<Mat> poseDescs = vector<Mat>(lines.size());
+    for (int i = 0; i < lines.size(); i++)
+        poseDescs[i] = Pose(this->currentJointNames, this->getJointPositions(lines[i])).getDescriptor();
+
+    return poseDescs;
+}
+
 vector<Pose> MotionParser::getAllPoses() {
-    std::string line;
-    vector<Pose> poses = vector<Pose>();
-    while (getline(this->currentFile, line))
-        poses.push_back(Pose(this->currentJointNames, this->getJointPositions(line)));
+    string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
+    vector<string> lines = split(file, '\n');
+    vector<Pose> poses = vector<Pose>(lines.size());
+    for (int i = 0; i < lines.size(); i++)
+        poses[i] = Pose(this->currentJointNames, this->getJointPositions(lines[i]));
 
     return poses;
 }
@@ -54,7 +109,7 @@ vector<string> split(string s, char delim) {
     vector<string> toks;
     size_t last = 0;
     size_t next = 0;
-    while ((next = s.find(',', last)) != string::npos) {
+    while ((next = s.find(delim, last)) != string::npos) {
         toks.push_back(s.substr(last, next - last));
         last = next + 1;
     }

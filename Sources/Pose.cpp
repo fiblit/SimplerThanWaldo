@@ -96,6 +96,7 @@ Mat Pose::getLocalInverse() {
 //to compare how close two descriptors are, you simply take the dot product of them.
 //the closer this value is to ... NUMBONES=10, the better. (since there are NUMBONES unit vectors)
 Mat Pose::getDescriptor() {
+    //30-dimensional (ish), sheesh
     Mat descriptor = Mat(3 * bonenames::NUMBONES, 1, CV_32F);
 
     //the math says this may be unnecessary.

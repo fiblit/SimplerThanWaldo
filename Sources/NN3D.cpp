@@ -11,7 +11,10 @@ typedef std::chrono::high_resolution_clock Clock;
 
 //TODO: also return meta information(like avg bone lengths)/an actual class/struct for the DB
 MotionDB createDB(string path) {
-    vector<Pose> db;
+    MotionDB db;
+    db.descs = vector<Mat>();
+    db.avgBoneLength = vector<double>(bonenames::NUMBONES, 0.0);
+
     //while there are motion files
     cout << "i/o start" << endl;
     auto t1 = Clock::now();
@@ -20,16 +23,8 @@ MotionDB createDB(string path) {
         //load file into MotionParser
         if (!is_directory(p.path())) {
             mp.open(p.path().string());
-            while (true) {
-                Pose current;
-                try {
-                    current = mp.getNextPose();
-                }
-                catch (overflow_error&) {
-                    break;
-                }
-                db.push_back(current);
-            }
+            MotionDB poses = mp.getMiniMotionDB();
+            db = mp.mergeMotionDB(db, poses);
         }
     }
     auto t2 = Clock::now();
@@ -42,6 +37,7 @@ MotionDB createDB(string path) {
 
 //I'm pretty sure they all have the same length... but I might as well take the average.
 //also this should only ever need to be done once.
+/*
 vector<double> getAvgBoneLength(MotionDB db) {
     vector<double> runningAvg = vector<double>(bonenames::NUMBONES);
     int poseCount = 0;
@@ -67,7 +63,7 @@ vector<double> getAvgBoneLength(MotionDB db) {
 
     return runningAvg;
 }
-
+*/
 
 #include <chrono>
 typedef std::chrono::high_resolution_clock Clock;
@@ -89,7 +85,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
 
     cout << "d0" << endl;
     auto t0 = Clock::now();
-    vector<double> bonelength = getAvgBoneLength(db);
+    vector<double> bonelength = db.avgBoneLength;
     //calculate orthographic scale, s
     auto t1 = Clock::now();
     cout << "d1 in " 
@@ -184,14 +180,12 @@ double findANN(Pose guess, MotionDB db) {
     Mat guessDesc = guess.getDescriptor();
 
     //while there are motion files
-    for (Pose p : db) {
+    for (Mat desc : db.descs) {
     //    auto t1 = Clock::now();
-        // get pose descriptor for current pose
-        Mat actualDesc = p.getDescriptor();
 
         //nearest neighbour's distance; jiang's method doesn't care what the real pose looks like.
         //His method just cares that the guessed pose is close to a real pose.
-        closest = max(closest, comparePose(guessDesc, actualDesc));
+        closest = max(closest, comparePose(guessDesc, desc));
      //   auto t2 = Clock::now();;
      //   cout << "\tNNcomp in "
      //       << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()

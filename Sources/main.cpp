@@ -68,12 +68,9 @@ int main(int argc, char** argv) {
     imshow("3D Pose", out);
 */
     cout << "\n DONE \n" << flush;
-    waitKey(0);
-    cout << "\n!\n";
-    waitKey(0);
-    cout << "\n!\n" << flush;
-    waitKey(0);
-    cout << "\n!\n" << flush;
+    for(;;)
+        //because waiting 2 hours and then having the window close FUCKING SUCKS
+        waitKey(0);
 
 }
 

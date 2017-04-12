@@ -69,18 +69,19 @@ MotionDB MotionParser::getMiniMotionDB() {
 
 MotionDB MotionParser::mergeMotionDB(MotionDB db1, MotionDB db2) {
     MotionDB db;
-    db.descs = vector<Mat>();
     //I hope these next two aren't super slow...
     //ideally they are replaced by a kd-tree
+    db.descs.reserve(db1.descs.size() + db2.descs.size()); // preallocate memory
     db.descs.insert(db.descs.end(), db1.descs.begin(), db1.descs.end());
     db.descs.insert(db.descs.end(), db2.descs.begin(), db2.descs.end());
+    
 
     db.avgBoneLength = vector<double>(bonenames::NUMBONES);
     for (int i = 0; i < bonenames::NUMBONES; i++)
         db.avgBoneLength[i] =
             (db1.avgBoneLength[i] * db1.descs.size() + db2.avgBoneLength[i] * db2.descs.size()) 
             / (db1.descs.size() + db2.descs.size());
-    cout << db.descs.size() << "\n";
+    cout << db1.descs.size() << "+" << db2.descs.size() << "=" << db.descs.size() << "\n";
     return db;
 }
 

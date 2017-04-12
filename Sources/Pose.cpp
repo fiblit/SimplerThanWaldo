@@ -43,7 +43,7 @@ vector<Vec3f> Pose::filterJoints(vector<string> names, vector<Vec3f> positions) 
     if (names.size() != positions.size())
         throw runtime_error("must be equal joints");
 
-    vector<Vec3f> filteredPositions = vector<Vec3f>(jointnames::NUMJOINTS);
+    vector<Vec3f> filteredPositions(jointnames::NUMJOINTS);
     for (int i = 0; i < names.size(); i++) {
         jointnames::jointnames currentJoint;
         try {
@@ -54,6 +54,7 @@ vector<Vec3f> Pose::filterJoints(vector<string> names, vector<Vec3f> positions) 
         }
         filteredPositions[currentJoint] = positions[i];
     }
+
     return filteredPositions;
 }
 

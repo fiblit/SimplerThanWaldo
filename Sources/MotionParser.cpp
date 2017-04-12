@@ -42,13 +42,15 @@ MotionDB MotionParser::getMiniMotionDB() {
     int poseCount = 0;
     
     string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
-    vector<string> lines = split(file, '\n');
-    mini_db.descs = vector<Mat>(lines.size());
     
     //for each pose
-    for (int i = 0; i < lines.size(); i++) {
-        Pose p = Pose(this->currentJointNames, this->getJointPositions(lines[i]));
-        mini_db.descs[i] = p.getDescriptor();
+    size_t afterLastSplit = 0, nextSplitEnd = 0;
+    while((nextSplitEnd = file.find("\n", afterLastSplit)) != string::npos) {
+        if (nextSplitEnd == afterLastSplit)//EOF
+            break;
+
+        Pose p = Pose(this->currentJointNames, this->getJointPositions(file.substr(afterLastSplit, nextSplitEnd - afterLastSplit)));
+        mini_db.descs.push_back(p.getDescriptor());
 
         vector<Bone> bones = p.getBones();
         vector<Vec3f> joints = p.getJoints();
@@ -58,6 +60,8 @@ MotionDB MotionParser::getMiniMotionDB() {
             mini_db.avgBoneLength[i] = (len + poseCount * mini_db.avgBoneLength[i]) / (poseCount + 1);
         }
         poseCount++;
+
+        afterLastSplit = nextSplitEnd + 1;
     }
 
     return mini_db;
@@ -71,11 +75,12 @@ MotionDB MotionParser::mergeMotionDB(MotionDB db1, MotionDB db2) {
     db.descs.insert(db.descs.end(), db1.descs.begin(), db1.descs.end());
     db.descs.insert(db.descs.end(), db2.descs.begin(), db2.descs.end());
 
+    db.avgBoneLength = vector<double>(bonenames::NUMBONES);
     for (int i = 0; i < bonenames::NUMBONES; i++)
-        db.avgBoneLength[i] = 
+        db.avgBoneLength[i] =
             (db1.avgBoneLength[i] * db1.descs.size() + db2.avgBoneLength[i] * db2.descs.size()) 
             / (db1.descs.size() + db2.descs.size());
-
+    cout << db.descs.size() << "\n";
     return db;
 }
 

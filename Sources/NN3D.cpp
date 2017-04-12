@@ -22,13 +22,22 @@ MotionDB createDB(string path) {
         MotionParser mp;
         //load file into MotionParser
         if (!is_directory(p.path())) {
+
+            cout << "\tmp start " << p.path().filename().string() << endl;
+            auto mpt1 = Clock::now();
+
             mp.open(p.path().string());
             MotionDB poses = mp.getMiniMotionDB();
             db = mp.mergeMotionDB(db, poses);
+
+            auto mpt2 = Clock::now();
+            cout << "\tmp in "
+                << chrono::duration_cast<chrono::nanoseconds>(mpt2 - mpt1).count()
+                << endl;
         }
     }
     auto t2 = Clock::now();
-    cout << "i/o"
+    cout << "i/o in "
         << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
         << endl;
 
@@ -175,13 +184,13 @@ double comparePose(Mat poseDescriptor1, Mat poseDescriptor2) {
 //not actually *approximate* yet. I was going to read some locality-sensitive hashing stuff for that.
 double findANN(Pose guess, MotionDB db) {
 
-   // auto t1 = Clock::now();
+    auto t1 = Clock::now();
     double closest = numeric_limits<double>::lowest();
     Mat guessDesc = guess.getDescriptor();
 
     //while there are motion files
     for (Mat desc : db.descs) {
-    //    auto t1 = Clock::now();
+        auto t1 = Clock::now();
 
         //nearest neighbour's distance; jiang's method doesn't care what the real pose looks like.
         //His method just cares that the guessed pose is close to a real pose.
@@ -192,9 +201,9 @@ double findANN(Pose guess, MotionDB db) {
     //        << endl;
     }
 
-    //auto t2 = Clock::now();
-   // cout << "NN in "
-    //    << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
-    //    << endl;
+    auto t2 = Clock::now();
+    cout << "NN in "
+        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
+        << endl;
     return closest;
 }

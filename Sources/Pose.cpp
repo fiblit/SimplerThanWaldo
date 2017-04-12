@@ -1,6 +1,9 @@
 #include "Pose.h"
 #include <algorithm>
 
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
+
 using namespace std;
 using namespace cv;
 
@@ -40,18 +43,15 @@ Pose::~Pose() {
 }
 
 vector<Vec3f> Pose::filterJoints(vector<string> names, vector<Vec3f> positions) {
-    if (names.size() != positions.size())
-        throw runtime_error("must be equal joints");
-
+    //trade safety for speed
+    //if (names.size() != positions.size())
+    //    throw runtime_error("must be equal joints");
     vector<Vec3f> filteredPositions(jointnames::NUMJOINTS);
     for (int i = 0; i < names.size(); i++) {
         jointnames::jointnames currentJoint;
-        try {
-            currentJoint = this->strToJoint(names[i]);
-        }
-        catch (domain_error&) {
+        currentJoint = this->strToJoint(names[i]);
+        if (currentJoint == jointnames::NIL)
             continue;
-        }
         filteredPositions[currentJoint] = positions[i];
     }
 
@@ -195,5 +195,5 @@ jointnames::jointnames Pose::strToJoint(std::string name) {
     else if (name == "rfingers_end")  return jointnames::RFINGERS_END;
     else if (name == "rthumb")        return jointnames::RTHUMB;
     else if (name == "rthumb_end")    return jointnames::RTHUMB_END;
-    else                              throw domain_error("invalid joint name");
+    else                              return jointnames::NIL;
 }

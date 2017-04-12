@@ -10,7 +10,7 @@
 namespace bonenames {
     const int NUMBONES = 10;
     //keep the bonenames such that the hierarchy is preserved: (parent before child)
-    enum bonenames { TORSO, HEAD, LUPARM, LLOARM, LUPLEG, LLOLEG, RUPARM, RLOARM, RUPLEG, RLOLEG };
+    enum bonenames { TORSO, HEAD, LUPARM, LLOARM, LUPLEG, LLOLEG, RUPARM, RLOARM, RUPLEG, RLOLEG, NIL};
 }
 namespace jointnames {
     const int NUMJOINTS = 35;
@@ -18,7 +18,7 @@ namespace jointnames {
         HIP, LFEMUR, LTIBIA, LFOOT, LTOES, LTOES_END, RFEMUR, RTIBIA, RFOOT, RTOES,
         RTOES_END, LOWERBACK, UPPERBACK, THORAX, LOWERNECK, UPPERNECK, HEAD, HEAD_END, CLAVICLE,
         LHUMERUS, LRADIUS, LWRIST, LHAND, LFINGERS, LFINGERS_END, LTHUMB, LTHUMB_END, RHUMERUS,
-        RRADIUS, RWRIST, RHAND, RFINGERS, RFINGERS_END, RTHUMB, RTHUMB_END
+        RRADIUS, RWRIST, RHAND, RFINGERS, RFINGERS_END, RTHUMB, RTHUMB_END, NIL
     };
 }
 

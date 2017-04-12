@@ -2,6 +2,9 @@
 #include <sstream>
 #include <iostream>
 
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
+
 // TODO: comments/documentation
 
 // do not use outside of a .cpp or function
@@ -33,6 +36,103 @@ Pose MotionParser::getNextPose() {
         return Pose(this->currentJointNames, this->getJointPositions(line));
     else
         throw overflow_error("EOF");
+}
+
+void MotionParser::updateMotionDB(MotionDB * db) {
+    //cout << "\n\t\tread" << endl;
+    //auto mpt_1 = Clock::now();
+    string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
+    //auto mpt_2 = Clock::now();
+    //cout << "\t\t in "
+    //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+    //    << endl;
+
+    //compare in aggregate case for with/without
+    /*
+    cout << "\n\t\tcounter" << endl;
+    mpt_1 = Clock::now();
+    size_t lineCount = count(file.begin(), file.end(), '\n');
+    //for (int i = 0; i < file.size(); i++)
+    //    if (file[i] == '\n')
+    //        lineCount++;
+    mpt_2 = Clock::now();
+    cout << "\t\t in "
+        << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+        << endl;
+
+    size_t originSize = db->descs.size();
+
+    cout << "\n\t\tresize" << endl;
+    mpt_1 = Clock::now();
+    db->descs.reserve(originSize + lineCount);
+    mpt_2 = Clock::now();
+    cout << "\t\t in "
+        << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+        << endl;
+    */
+     
+
+    //for each pose
+    //int i = 0;
+    for ( size_t afterLastSplit = 0, nextSplitEnd = 0;
+        //I should time that find
+          (nextSplitEnd = file.find('\n', afterLastSplit)) != string::npos 
+            && nextSplitEnd != afterLastSplit;//eof
+          afterLastSplit = nextSplitEnd + 1) {
+
+        //cout << "\n\t\t\tget line" << endl;
+        //mpt_1 = Clock::now();
+        string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
+        //mpt_2 = Clock::now();
+        //cout << "\t\t\t in "
+        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+        //    << endl;
+        //cout << "\t\t\tget joints" << endl;
+        //mpt_1 = Clock::now();
+        vector<Vec3f> vjp = this->getJointPositions(line);
+        //mpt_2 = Clock::now();
+        //cout << "\t\t\t in "
+        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+        //    << endl;
+        //cout << "\t\t\tcreate" << endl;
+        //mpt_1 = Clock::now();
+        Pose p = Pose(this->currentJointNames, vjp);
+        //mpt_2 = Clock::now();
+        //cout << "\t\t\t in "
+        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+        //    << endl;
+
+        //cout << "\t\t\tavg" << endl;
+        //mpt_1 = Clock::now();
+        vector<Bone> bones = p.getBones();
+        vector<Vec3f> joints = p.getJoints();
+        for (int i = 0; i < bonenames::NUMBONES; i++) {
+            Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
+            double len = sqrt(diff.dot(diff));
+            db->avgBoneLength[i] = (len + db->descs.size() * db->avgBoneLength[i]) / (db->descs.size() + 1);
+        }
+        //mpt_2 = Clock::now();
+        //cout << "\t\t\t in "
+        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+        //    << endl;
+
+        //cout << "\t\t\tget desc" << endl;
+        //mpt_1 = Clock::now();
+        Mat desc = p.getDescriptor();
+        //mpt_2 = Clock::now();
+        //cout << "\t\t\t in "
+        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+        //    << endl;
+
+        //cout << "\t\t\tpush" << endl;
+        //mpt_1 = Clock::now();
+        //db->descs[originSize + i++] = desc;
+        db->descs.push_back(desc);
+        //mpt_2 = Clock::now();
+        //cout << "\t\t\t in "
+        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+        //    << endl;
+    }
 }
 
 MotionDB MotionParser::getMiniMotionDB() {
@@ -67,22 +167,19 @@ MotionDB MotionParser::getMiniMotionDB() {
     return mini_db;
 }
 
-MotionDB MotionParser::mergeMotionDB(MotionDB db1, MotionDB db2) {
-    MotionDB db;
+void MotionParser::mergeMotionDB(MotionDB * db1, MotionDB db2) {
     //I hope these next two aren't super slow...
     //ideally they are replaced by a kd-tree
-    db.descs.reserve(db1.descs.size() + db2.descs.size()); // preallocate memory
-    db.descs.insert(db.descs.end(), db1.descs.begin(), db1.descs.end());
-    db.descs.insert(db.descs.end(), db2.descs.begin(), db2.descs.end());
-    
+    int size = db1->descs.size();
+    db1->descs.insert(db1->descs.end(), db2.descs.begin(), db2.descs.end());
 
-    db.avgBoneLength = vector<double>(bonenames::NUMBONES);
     for (int i = 0; i < bonenames::NUMBONES; i++)
-        db.avgBoneLength[i] =
-            (db1.avgBoneLength[i] * db1.descs.size() + db2.avgBoneLength[i] * db2.descs.size()) 
-            / (db1.descs.size() + db2.descs.size());
-    cout << db1.descs.size() << "+" << db2.descs.size() << "=" << db.descs.size() << "\n";
-    return db;
+        db1->avgBoneLength[i] =
+            (db1->avgBoneLength[i] * size + db2.avgBoneLength[i] * db2.descs.size()) 
+            / (size + db2.descs.size());
+    cout << size << "+" << db2.descs.size() << "=" << db1->descs.size() << "\n";
+
+    //return db1;
 }
 
 vector<Mat> MotionParser::getAllPoseDescriptors() {
@@ -136,18 +233,22 @@ vector<string> MotionParser::getJointNames(string header) {
 }
 
 vector<Vec3f> MotionParser::getJointPositions(string line) {
-    vector<string> vals = split(line, ',');
     vector<Vec3f> positions;
 
-    for (int i = 0; i+2 < vals.size(); i += 3) {
-        float posf[3] = {0 ,0, 0};// x y z (will this even work?, being static and all?)
-        for (int off = 0; off < 3; off++)
-            if (vals[i + off] != "")
-                posf[off] = stof(vals[i + off]);
+    float posf[3] = {0,0,0};
+    int i = 0;
+    for (size_t afterLastSplit = 0, nextSplitEnd = 0;
+        (nextSplitEnd = line.find(',', afterLastSplit)) != string::npos
+        && nextSplitEnd != afterLastSplit;//eol
+        afterLastSplit = nextSplitEnd + 1) {
+        string val = line.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
+        posf[i++] = stof(val);
 
-        Vec3f pos = Vec3f(posf[0], posf[1], posf[2]);
-        positions.push_back(pos);
+        if (i == 3) {
+            positions.push_back(Vec3f(posf[0], posf[1], posf[2]));
+            i = 0;
+        }
     }
-    
+
     return positions;
 }

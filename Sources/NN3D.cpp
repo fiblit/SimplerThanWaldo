@@ -28,6 +28,15 @@ MotionDB createDB(string path) {
 
             mp.open(p.path().string());
 
+            cout << "\t\tmp update start" << p.path().filename().string() << endl;
+            auto mpt_1 = Clock::now();
+            mp.updateMotionDB(&db);
+            auto mpt_2 = Clock::now();
+            cout << "\t\tmp update in "
+                << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+                << endl;
+
+            /*
             cout << "\t\tmp get start " << p.path().filename().string() << endl;
             auto mpt_1 = Clock::now();
             MotionDB poses = mp.getMiniMotionDB();
@@ -38,7 +47,7 @@ MotionDB createDB(string path) {
 
             cout << "\t\tmp merge start " << p.path().filename().string() << endl;
             mpt_1 = Clock::now();
-            db = mp.mergeMotionDB(db, poses);
+            mp.mergeMotionDB(&db, poses);
             mpt_2 = Clock::now();
             cout << "\t\tmp merge in "
                 << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
@@ -48,6 +57,7 @@ MotionDB createDB(string path) {
             cout << "\tmp in "
                 << chrono::duration_cast<chrono::nanoseconds>(mpt2 - mpt1).count()
                 << endl;
+            */
         }
     }
     auto t2 = Clock::now();

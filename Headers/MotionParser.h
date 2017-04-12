@@ -30,8 +30,10 @@ public:
     Pose getNextPose();
     std::vector<Pose> getAllPoses();
     std::vector<cv::Mat> getAllPoseDescriptors();
+
+    void MotionParser::updateMotionDB(MotionDB * db);
     MotionDB getMiniMotionDB();
-    MotionDB mergeMotionDB(MotionDB db1, MotionDB db2);
+    void mergeMotionDB(MotionDB * db1, MotionDB db2);
 private:
     std::ifstream currentFile;
     std::vector<std::string> currentJointNames;

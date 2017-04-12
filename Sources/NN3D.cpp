@@ -23,18 +23,18 @@ MotionDB createDB(string path) {
         //load file into MotionParser
         if (!is_directory(p.path())) {
 
-            cout << "\tmp start " << p.path().filename().string() << endl;
-            auto mpt1 = Clock::now();
+            //cout << "\tmp start " << p.path().filename().string() << endl;
+            //auto mpt1 = Clock::now();
 
             mp.open(p.path().string());
 
-            cout << "\t\tmp update start" << p.path().filename().string() << endl;
-            auto mpt_1 = Clock::now();
+            //cout << "\t\tmp update start" << p.path().filename().string() << endl;
+            //auto mpt_1 = Clock::now();
             mp.updateMotionDB(&db);
-            auto mpt_2 = Clock::now();
-            cout << "\t\tmp update in "
-                << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-                << endl;
+            //auto mpt_2 = Clock::now();
+            //cout << "\t\tmp update in "
+            //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
+            //    << endl;
 
             /*
             cout << "\t\tmp get start " << p.path().filename().string() << endl;

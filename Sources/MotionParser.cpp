@@ -39,37 +39,18 @@ Pose MotionParser::getNextPose() {
 }
 
 void MotionParser::updateMotionDB(MotionDB * db) {
-    //cout << "\n\t\tread" << endl;
-    //auto mpt_1 = Clock::now();
     string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
-    //auto mpt_2 = Clock::now();
-    //cout << "\t\t in "
-    //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-    //    << endl;
 
     //compare in aggregate case for with/without
-    /*
-    cout << "\n\t\tcounter" << endl;
-    mpt_1 = Clock::now();
+    /*/
     size_t lineCount = count(file.begin(), file.end(), '\n');
-    //for (int i = 0; i < file.size(); i++)
-    //    if (file[i] == '\n')
-    //        lineCount++;
-    mpt_2 = Clock::now();
-    cout << "\t\t in "
-        << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-        << endl;
-
+    for (int i = 0; i < file.size(); i++)
+        if (file[i] == '\n')
+            lineCount++;
     size_t originSize = db->descs.size();
 
-    cout << "\n\t\tresize" << endl;
-    mpt_1 = Clock::now();
     db->descs.reserve(originSize + lineCount);
-    mpt_2 = Clock::now();
-    cout << "\t\t in "
-        << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-        << endl;
-    */
+    //*/
      
 
     //for each pose
@@ -80,30 +61,12 @@ void MotionParser::updateMotionDB(MotionDB * db) {
             && nextSplitEnd != afterLastSplit;//eof
           afterLastSplit = nextSplitEnd + 1) {
 
-        //cout << "\n\t\t\tget line" << endl;
-        //mpt_1 = Clock::now();
         string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
-        //mpt_2 = Clock::now();
-        //cout << "\t\t\t in "
-        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-        //    << endl;
-        //cout << "\t\t\tget joints" << endl;
-        //mpt_1 = Clock::now();
-        vector<Vec3f> vjp = this->getJointPositions(line);
-        //mpt_2 = Clock::now();
-        //cout << "\t\t\t in "
-        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-        //    << endl;
-        //cout << "\t\t\tcreate" << endl;
-        //mpt_1 = Clock::now();
-        Pose p = Pose(this->currentJointNames, vjp);
-        //mpt_2 = Clock::now();
-        //cout << "\t\t\t in "
-        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-        //    << endl;
 
-        //cout << "\t\t\tavg" << endl;
-        //mpt_1 = Clock::now();
+        vector<Vec3f> vjp = this->getJointPositions(line);
+
+        Pose p = Pose(this->currentJointNames, vjp);
+
         vector<Bone> bones = p.getBones();
         vector<Vec3f> joints = p.getJoints();
         for (int i = 0; i < bonenames::NUMBONES; i++) {
@@ -111,27 +74,10 @@ void MotionParser::updateMotionDB(MotionDB * db) {
             double len = sqrt(diff.dot(diff));
             db->avgBoneLength[i] = (len + db->descs.size() * db->avgBoneLength[i]) / (db->descs.size() + 1);
         }
-        //mpt_2 = Clock::now();
-        //cout << "\t\t\t in "
-        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-        //    << endl;
 
-        //cout << "\t\t\tget desc" << endl;
-        //mpt_1 = Clock::now();
         Mat desc = p.getDescriptor();
-        //mpt_2 = Clock::now();
-        //cout << "\t\t\t in "
-        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-        //    << endl;
 
-        //cout << "\t\t\tpush" << endl;
-        //mpt_1 = Clock::now();
-        //db->descs[originSize + i++] = desc;
         db->descs.push_back(desc);
-        //mpt_2 = Clock::now();
-        //cout << "\t\t\t in "
-        //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-        //    << endl;
     }
 }
 

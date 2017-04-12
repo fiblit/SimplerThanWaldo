@@ -62,7 +62,7 @@ MotionDB createDB(string path) {
     }
     auto t2 = Clock::now();
     cout << "i/o in "
-        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
+        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
         << endl;
 
     return db;
@@ -105,6 +105,8 @@ typedef std::chrono::high_resolution_clock Clock;
 //labels.size() MUST equal points.size()
 Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, string dbpath) {
     MotionDB db = createDB(dbpath);
+    cout << "after db" << endl;
+    auto t_ = Clock::now();
 
     //create 2D Pose
     vector<Vec3f> points3D = vector<Vec3f>(points.size());
@@ -116,18 +118,21 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
 
     //calculate bone lengths
 
-    cout << "d0" << endl;
+    cout << "after create 2d skele in 3d in" << endl;
     auto t0 = Clock::now();
+    cout << "after get avg bone length in "
+        << chrono::duration_cast<chrono::nanoseconds>(t0 - t_).count() / 1000000000.
+        << endl;
     vector<double> bonelength = db.avgBoneLength;
     //calculate orthographic scale, s
     auto t1 = Clock::now();
-    cout << "d1 in " 
+    cout << "after get avg bone length in " 
         << chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count() / 1000000000.
         << endl;
     vector<Bone> bones2D = estimate2D.getBones();
     vector<Vec3f> joints2D = estimate2D.getJoints();//different order than points3D
     auto t2 = Clock::now();
-    cout << "d2 in " 
+    cout << "after get bones & joints in " 
         << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
         << endl;
     double s = 1;
@@ -142,7 +147,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     }
 
     auto t3 = Clock::now();
-    cout << "d3 in " 
+    cout << "after get scale in " 
         << chrono::duration_cast<chrono::nanoseconds>(t3 - t2).count() / 1000000000.
         << endl;
 
@@ -159,7 +164,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     }
    
     auto t4 = Clock::now();
-    cout << "d4 in " 
+    cout << "after orthographic depth diff in " 
         << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
         << endl;
 
@@ -186,7 +191,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     }
 
     auto f = Clock::now();
-    cout << "f in " 
+    cout << "after ANN search over all possible depth placements in " 
         << chrono::duration_cast<chrono::nanoseconds>(f - t4).count() / 1000000000.
         << endl;
     return final;
@@ -227,7 +232,7 @@ double findANN(Pose guess, MotionDB db) {
 
     auto t2 = Clock::now();
     cout << "NN in "
-        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
+        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
         << endl;
     return closest;
 }

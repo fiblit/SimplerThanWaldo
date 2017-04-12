@@ -194,6 +194,21 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     cout << "after ANN search over all possible depth placements in " 
         << chrono::duration_cast<chrono::nanoseconds>(f - t4).count() / 1000000000.
         << endl;
+
+    cout << "------"
+        << "------" 
+        << "------" 
+        << "------"
+        << endl;
+    vector<Bone> bones = final.getBones();
+    vector<Vec3f> joints = final.getJoints();
+    for (int k = 0; k < bones.size(); k++)
+        cout << joints[bones[k].start] << "<->" << joints[bones[k].end] << endl;
+
+    Mat desc = final.getDescriptor();
+    for (int i = 0; i < desc.rows; i++)
+        cout << desc.row(i) << endl;
+    
     return final;
 }
 

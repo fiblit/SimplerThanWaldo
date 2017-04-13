@@ -23,18 +23,18 @@ int main(int argc, char** argv) {
     vector<j::jointnames> labels = {
         j::HIP, j::CLAVICLE, j::HEAD_END, //spine, there is also a HEAD joint, that I may switch HEAD_END to
         j::LHUMERUS, j::LRADIUS, j::LWRIST, //l arm
-        j::RHUMERUS, j::RRADIUS, j::RWRIST, //r arm
         j::LFEMUR, j::LTIBIA, j::LFOOT, //l leg
-        j::RFEMUR, j::LFEMUR, j::RFOOT //r leg
+        j::RHUMERUS, j::RRADIUS, j::RWRIST, //r arm
+        j::RFEMUR, j::RTIBIA, j::RFOOT //r leg
     };
 
     float s = 50.f; //pretty sure it doesn't matter
     vector<Point2f> points = {
-        Point2f(0*s, 0*s), Point2f(0*s, 5*s), Point2f(0*s, 6*s),//spine
-        Point2f(1*s, 5*s), Point2f(2*s, 3*s), Point2f(2*s, 0*s),//l arm
-        Point2f(-1*s, 5*s), Point2f(-2*s, 3*s), Point2f(-2*s, 0*s),//r arm
-        Point2f(1*s, -1*s), Point2f(1*s, -3*s), Point2f(1*s, -5*s),//l leg
-        Point2f(1*s, -1*s), Point2f(-1*s, -3*s), Point2f(-1*s, -5*s)//r leg
+        Point2f( 0*s,  0*s), Point2f( 0*s,  5*s), Point2f( 0*s,  6*s),//spine
+        Point2f( 1*s,  5*s), Point2f( 2*s,  3*s), Point2f( 2*s,  0*s),//l arm
+        Point2f( 1*s, -1*s), Point2f( 1*s, -3*s), Point2f( 1*s, -5*s),//l leg
+        Point2f(-1*s,  5*s), Point2f(-2*s,  3*s), Point2f(-2*s,  0*s),//r arm
+        Point2f(-1*s, -1*s), Point2f(-1*s, -3*s), Point2f(-1*s, -5*s)//r leg
     };
 
     string databasepath = "E:/djdjh/Documents/Classes/Research/allasfamc/all_asfamc/csvpose";

@@ -58,6 +58,7 @@ MotionDB createDB(string path) {
                 << chrono::duration_cast<chrono::nanoseconds>(mpt2 - mpt1).count()
                 << endl;
             */
+            
         }
     }
     auto t2 = Clock::now();
@@ -104,9 +105,7 @@ typedef std::chrono::high_resolution_clock Clock;
 //based on jiang
 //labels.size() MUST equal points.size()
 Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, string dbpath) {
-    MotionDB db = createDB(dbpath);
-    cout << "after db" << endl;
-    auto t_ = Clock::now();
+    auto t_start = Clock::now();
 
     //create 2D Pose
     vector<Vec3f> points3D = vector<Vec3f>(points.size());
@@ -115,19 +114,27 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         points3D[i] = Vec3f(points[i].x, points[i].y, 0);
 
     Pose estimate2D(labels, points3D);
+    //estimate2D.print();
 
     //calculate bone lengths
-
-    cout << "after create 2d skele in 3d in" << endl;
     auto t0 = Clock::now();
-    cout << "after get avg bone length in "
-        << chrono::duration_cast<chrono::nanoseconds>(t0 - t_).count() / 1000000000.
+    cout << "after create 2d skele in 3d in"
+        << chrono::duration_cast<chrono::nanoseconds>(t0 - t_start).count() / 1000000000.
         << endl;
+
+    //release mode breakpoint; because debug is 10x slower
+
+    MotionDB db = createDB(dbpath);
+    auto t_ = Clock::now();
+    cout << "after db in " 
+        << chrono::duration_cast<chrono::nanoseconds>(t_ - t0).count() / 1000000000.
+        << endl;
+
     vector<double> bonelength = db.avgBoneLength;
     //calculate orthographic scale, s
     auto t1 = Clock::now();
     cout << "after get avg bone length in " 
-        << chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count() / 1000000000.
+        << chrono::duration_cast<chrono::nanoseconds>(t1 - t_).count() / 1000000000.
         << endl;
     vector<Bone> bones2D = estimate2D.getBones();
     vector<Vec3f> joints2D = estimate2D.getJoints();//different order than points3D
@@ -168,13 +175,18 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
         << endl;
 
-    Pose final;
+    Pose finalPose;
     double mostSimilar = numeric_limits<double>::lowest();
     //for each possible flipping of the points' 3D coordinates signs
     //a bit-level 0 means negative, a 1 means positive
+
+    //could be parallelised, however the biggest speed up would come from a spatial data strucutre as that's O(n) -> O(log n)
     for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << bonenames::NUMBONES); boneDepthSign++) {
         vector<Vec3f> guessPositions = joints2D;
         vector<Bone> guessBones = bones2D;
+
+        auto ann1 = Clock::now();
+        cout << "\tguess generation" << endl;
         for (int k = 0; k < bonenames::NUMBONES; k++) {
             bool sign = bitset<bonenames::NUMBONES>(boneDepthSign)[k];
             //the bonenames are ordered in such a way that this will work fine
@@ -183,11 +195,22 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         }
 
         Pose guess(guessPositions);
+        auto ann2 = Clock::now();
+        cout << "\t in "
+            << chrono::duration_cast<chrono::nanoseconds>(ann2 - ann1).count() / 1000000000.
+            << endl;
+
+        auto ann3 = Clock::now();
+        cout << "\tfind ann" << endl;
         double similarity = findANN(guess, db);
         if (similarity > mostSimilar) {
-            final = guess;
+            finalPose = guess;
             mostSimilar = similarity;
         }
+        auto ann4 = Clock::now();
+        cout << "\t in "
+            << chrono::duration_cast<chrono::nanoseconds>(ann4 - ann3).count() / 1000000000.
+            << endl;
     }
 
     auto f = Clock::now();
@@ -195,21 +218,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         << chrono::duration_cast<chrono::nanoseconds>(f - t4).count() / 1000000000.
         << endl;
 
-    cout << "------"
-        << "------" 
-        << "------" 
-        << "------"
-        << endl;
-    vector<Bone> bones = final.getBones();
-    vector<Vec3f> joints = final.getJoints();
-    for (int k = 0; k < bones.size(); k++)
-        cout << joints[bones[k].start] << "<->" << joints[bones[k].end] << endl;
+    cout << "------------------------" << endl;
+    finalPose.print();
 
-    Mat desc = final.getDescriptor();
-    for (int i = 0; i < desc.rows; i++)
-        cout << desc.row(i) << endl;
-    
-    return final;
+    return finalPose;
 }
 
 Mat reproject(Pose solution, Mat camera, int outW, int outH) {
@@ -228,13 +240,13 @@ double comparePose(Mat poseDescriptor1, Mat poseDescriptor2) {
 //not actually *approximate* yet. I was going to read some locality-sensitive hashing stuff for that.
 double findANN(Pose guess, MotionDB db) {
 
-    auto t1 = Clock::now();
+    //auto t1 = Clock::now();
     double closest = numeric_limits<double>::lowest();
     Mat guessDesc = guess.getDescriptor();
 
     //while there are motion files
     for (Mat desc : db.descs) {
-        auto t1 = Clock::now();
+        //uto t1 = Clock::now();
 
         //nearest neighbour's distance; jiang's method doesn't care what the real pose looks like.
         //His method just cares that the guessed pose is close to a real pose.
@@ -245,9 +257,9 @@ double findANN(Pose guess, MotionDB db) {
     //        << endl;
     }
 
-    auto t2 = Clock::now();
-    cout << "NN in "
-        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
-        << endl;
+    //auto t2 = Clock::now();
+    //cout << "NN in "
+    //    << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
+    //    << endl;
     return closest;
 }

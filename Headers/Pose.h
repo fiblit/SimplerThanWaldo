@@ -50,8 +50,10 @@ public:
 
     //should probably be in NN3D
     cv::Mat getLocalInverse();
-    void normLocToHip();
+    std::vector<cv::Vec3f> normLocToHip();
     cv::Mat getDescriptor();
+
+    void print();
 
 private:
     std::vector<cv::Vec3f> filterJoints(std::vector<std::string> names, std::vector<cv::Vec3f> positions);

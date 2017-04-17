@@ -133,12 +133,19 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     vector<double> bonelength = db.avgBoneLength;
     //calculate orthographic scale, s
     auto t1 = Clock::now();
+    cout << "avg bone lengths : ";
+    for (int i = 0; i < bonelength.size(); i++)
+        cout << "bone " << Pose::bonetoStr((bonenames::bonenames)i) << ": " << bonelength[i] << endl;
+
     cout << "after get avg bone length in " 
         << chrono::duration_cast<chrono::nanoseconds>(t1 - t_).count() / 1000000000.
         << endl;
     vector<Bone> bones2D = estimate2D.getBones();
     vector<Vec3f> joints2D = estimate2D.getJoints();//different order than points3D
     auto t2 = Clock::now();
+    cout << "bones & joints: ";
+    estimate2D.print();
+    cout << endl;
     cout << "after get bones & joints in " 
         << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
         << endl;
@@ -154,6 +161,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     }
 
     auto t3 = Clock::now();
+    cout << "scale : " << s << endl;
     cout << "after get scale in " 
         << chrono::duration_cast<chrono::nanoseconds>(t3 - t2).count() / 1000000000.
         << endl;
@@ -233,8 +241,14 @@ Mat reproject(Pose solution, Mat camera, int outW, int outH) {
 }
 
 //the closer to NUMBONES (i.e. the larger) the better.
-double comparePose(Mat poseDescriptor1, Mat poseDescriptor2) {
+double pose_similar(Mat poseDescriptor1, Mat poseDescriptor2) {
     return poseDescriptor1.dot(poseDescriptor2);
+}
+
+//the closer to 0, the better.
+double pose_distant(Mat pd1, Mat pd2) {
+    Mat diff = pd1 - pd2;
+    return diff.dot(diff); //==||diff||^2
 }
 
 //not actually *approximate* yet. I was going to read some locality-sensitive hashing stuff for that.

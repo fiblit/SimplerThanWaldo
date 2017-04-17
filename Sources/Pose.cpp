@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include <chrono>
+
 typedef std::chrono::high_resolution_clock Clock;
 
 using namespace std;
@@ -161,7 +162,7 @@ bonenames::bonenames Pose::strToBone(std::string name) {
     else if (name == "rloleg")    return bonenames::RLOLEG;
     else                          throw domain_error("invalid bone name");
 }
-std::string bonetoStr(bonenames::bonenames bone) {
+std::string Pose::bonetoStr(bonenames::bonenames bone) {
 
     if      (bone == bonenames::HEAD)    return "  head";
     else if (bone == bonenames::TORSO)   return " torso";

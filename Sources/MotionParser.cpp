@@ -30,6 +30,7 @@ void MotionParser::open(string path) {
     this->currentJointNames = this->getJointNames(header);
 }
 
+//deprecated; please don't use
 Pose MotionParser::getNextPose() {
     std::string line;
     if (getline(this->currentFile, line))
@@ -52,7 +53,6 @@ void MotionParser::updateMotionDB(MotionDB * db) {
     db->descs.reserve(originSize + lineCount);
     //*/
      
-
     //for each pose
     //int i = 0;
     for ( size_t afterLastSplit = 0, nextSplitEnd = 0;
@@ -81,6 +81,7 @@ void MotionParser::updateMotionDB(MotionDB * db) {
     }
 }
 
+//deprecated; please don't use
 MotionDB MotionParser::getMiniMotionDB() {
     MotionDB mini_db;
 
@@ -113,6 +114,8 @@ MotionDB MotionParser::getMiniMotionDB() {
     return mini_db;
 }
 
+
+//deprecated; please don't use
 void MotionParser::mergeMotionDB(MotionDB * db1, MotionDB db2) {
     //I hope these next two aren't super slow...
     //ideally they are replaced by a kd-tree
@@ -128,6 +131,7 @@ void MotionParser::mergeMotionDB(MotionDB * db1, MotionDB db2) {
     //return db1;
 }
 
+//deprecated; please don't use
 vector<Mat> MotionParser::getAllPoseDescriptors() {
     string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
     vector<string> lines = split(file, '\n');
@@ -138,6 +142,7 @@ vector<Mat> MotionParser::getAllPoseDescriptors() {
     return poseDescs;
 }
 
+//deprecated; please don't use
 vector<Pose> MotionParser::getAllPoses() {
     string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
     vector<string> lines = split(file, '\n');

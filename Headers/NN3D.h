@@ -22,7 +22,8 @@ Pose extract3D(std::vector<jointnames::jointnames> labels, std::vector<cv::Point
 cv::Mat reproject(Pose solution, cv::Mat virtualCamera, int outW, int outH);
 
 //see jiang
-double comparePose(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
+double pose_similar(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
+double pose_distant(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
 double findANN(Pose p, MotionDB db);
 
 #endif//NN3D_H

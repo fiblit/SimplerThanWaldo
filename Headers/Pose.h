@@ -53,14 +53,16 @@ public:
     std::vector<cv::Vec3f> normLocToHip();
     cv::Mat getDescriptor();
 
+    //enum converters
+    static bonenames::bonenames strToBone(std::string name);
+    static std::string bonetoStr(bonenames::bonenames bone);
+    static jointnames::jointnames strToJoint(std::string name);
+
     void print();
 
 private:
     std::vector<cv::Vec3f> filterJoints(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
     std::vector<Bone> filterBones();
-
-    bonenames::bonenames strToBone(std::string name);
-    jointnames::jointnames strToJoint(std::string name);
 
     //these are ordered by their enumerators
     //float is always float[3]

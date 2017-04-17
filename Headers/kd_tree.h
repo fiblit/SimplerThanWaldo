@@ -7,7 +7,7 @@
 class kd_tree {
 public:
     typedef cv::Mat Unit;
-    typedef double(UnitCmp)(Unit, Unit);
+    typedef double(*UnitCmp)(Unit, Unit);
 
     // or double *? double[]? std::vector<double>?
 

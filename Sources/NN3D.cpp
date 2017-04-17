@@ -264,7 +264,7 @@ double findANN(Pose guess, MotionDB db) {
 
         //nearest neighbour's distance; jiang's method doesn't care what the real pose looks like.
         //His method just cares that the guessed pose is close to a real pose.
-        closest = max(closest, comparePose(guessDesc, desc));
+        closest = max(closest, pose_similar(guessDesc, desc));
      //   auto t2 = Clock::now();;
      //   cout << "\tNNcomp in "
      //       << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()

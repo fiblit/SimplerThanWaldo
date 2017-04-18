@@ -70,7 +70,7 @@ void MotionParser::updateMotionDB(MotionDB * db) {
         vector<Bone> bones = p.getBones();
         vector<Vec3d> joints = p.getJoints();
         for (int i = 0; i < bonenames::NUMBONES; i++) {
-            Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
+            Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
             double len = sqrt(diff.dot(diff));
             db->avgBoneLength[i] = (len + db->descs.size() * db->avgBoneLength[i]) / (db->descs.size() + 1);
         }

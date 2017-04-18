@@ -15,6 +15,7 @@ public:
     kd_tree(std::vector<Unit> origin, int k, UnitCmp cmp);
     void build(std::vector<Unit> list, int axis);
     std::pair<Unit, double> nn_search(Unit p);
+    static int max_depth;
 private:
     int getPivot(std::vector<Unit> list, int axis);
     bool leq(Unit a, Unit b, int dim);

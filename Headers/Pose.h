@@ -44,7 +44,7 @@ public:
     //I might need a copy constructor...
     ~Pose();
     const cv::Vec3d getJointPosition(jointnames::jointnames joint);
-    //const cv::Vec3f getJointPosition(std::string jointName);
+    //const cv::Vec3d getJointPosition(std::string jointName);
     std::vector<Bone> getBones();
     std::vector<cv::Vec3d> getJoints();
 

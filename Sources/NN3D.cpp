@@ -82,9 +82,9 @@ vector<double> getAvgBoneLength(MotionDB db) {
     //while there are poses
     for (Pose p : db) {
         vector<Bone> bones = p.getBones();
-        vector<Vec3f> joints = p.getJoints();
+        vector<Vec3d> joints = p.getJoints();
         for (int i = 0; i < bonenames::NUMBONES; i++) {
-            Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
+            Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
             double len = sqrt(diff.dot(diff));
             runningAvg[i] = (len + poseCount * runningAvg[i]) / (poseCount + 1);
         }
@@ -151,8 +151,8 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
         << endl;
     double s = 1;
     for (int k = 0; k < bonenames::NUMBONES; k++) {
-        Vec3f start = joints2D[bones2D[k].start];
-        Vec3f end = joints2D[bones2D[k].end];
+        Vec3d start = joints2D[bones2D[k].start];
+        Vec3d end = joints2D[bones2D[k].end];
         double dx = end[0] - start[0];
         double dy = end[1] - start[1];
         //I don't know what jiang was doing, but I'm 95% sure this is wrong.
@@ -171,26 +171,21 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     vector<double> depthDiff = vector<double>(bonenames::NUMBONES);
     for (int k = 0; k < bonenames::NUMBONES; k++) {
         double scaledLen = s*bonelength[k];
-        Vec3f start = joints2D[bones2D[k].start];
-        Vec3f end = joints2D[bones2D[k].end];
+        Vec3d start = joints2D[bones2D[k].start];
+        Vec3d end = joints2D[bones2D[k].end];
         double dx = end[0] - start[0];
         double dy = end[1] - start[1];
         depthDiff[k] = sqrt(scaledLen*scaledLen - dx*dx - dy*dy);
+        cout << Pose::bonetoStr((bonenames::bonenames)k) << " " << depthDiff[k] << endl;
     }
    
     auto t4 = Clock::now();
     cout << "after orthographic depth diff in " 
         << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
         << endl;
-    
-    kd_tree * kd_tree_of_db = new kd_tree(db.descs, db.descs[0].rows, pose_distant);
 
-    auto t4_1 = Clock::now();
-    cout << "after kd tree construction in "
-        << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
-        << endl;
-
-    kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);
+    kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
+    cout << "max_depth: " << kd_tree::max_depth << endl;
     auto t4_1 = Clock::now();
     cout << "after kd tree construction in "
         << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
@@ -245,12 +240,12 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     return finalPose;
 }
 
-//TODO: this...
 Mat reproject(Pose solution, Mat camera, int outW, int outH) {
     //draw each bone as a projected line using the camera matrix as the projection
     //undoubtedly need more parameters, I'm just lazy.
     //The resulting mat is a 2D image. Should probably just be the projected space of
     //the pose, and another function should actually draw it.
+
     return Mat();
 }
 

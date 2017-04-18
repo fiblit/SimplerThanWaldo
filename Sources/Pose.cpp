@@ -85,15 +85,15 @@ vector<Vec3d> Pose::normLocToHip() {
 
 // see jiang "A" matrixB
 Mat Pose::getLocalInverse() {
-    Vec3f temp_xAxis = this->ordered_positions[jointnames::LFEMUR] - this->ordered_positions[jointnames::HIP];
+    Vec3d temp_xAxis = this->ordered_positions[jointnames::LFEMUR] - this->ordered_positions[jointnames::HIP];
     temp_xAxis /= norm(temp_xAxis);
-    Vec3f yAxis = this->ordered_positions[jointnames::CLAVICLE] - this->ordered_positions[jointnames::HIP];
+    Vec3d yAxis = this->ordered_positions[jointnames::CLAVICLE] - this->ordered_positions[jointnames::HIP];
     yAxis /= norm(yAxis);
-    Vec3f zAxis = temp_xAxis.cross(yAxis);
-    Vec3f xAxis = yAxis.cross(zAxis);
+    Vec3d zAxis = temp_xAxis.cross(yAxis);
+    Vec3d xAxis = yAxis.cross(zAxis);
 
     //Ainv
-    return (Mat_<float>(3,3)
+    return (Mat_<double>(3,3)
         << *xAxis.row(0).val, *xAxis.row(1).val, *xAxis.row(2).val,
            *yAxis.row(0).val, *yAxis.row(1).val, *yAxis.row(2).val,
            *zAxis.row(0).val, *zAxis.row(1).val, *zAxis.row(2).val);
@@ -103,10 +103,10 @@ Mat Pose::getLocalInverse() {
 //the closer this value is to ... NUMBONES=10, the better. (since there are NUMBONES unit vectors)
 Mat Pose::getDescriptor() {
     //30-dimensional (ish), sheesh
-    Mat descriptor = Mat(3 * bonenames::NUMBONES, 1, CV_32F);
+    Mat descriptor = Mat(3 * bonenames::NUMBONES, 1, CV_64F);
 
     //the math says this may be unnecessary.
-    //vector<Vec3f> normOrderedPos = this->normLocToHip();
+    //vector<Vec3d> normOrderedPos = this->normLocToHip();
 
     //it's okay that this doesn't use normOrderedPos as it handles that within it
     Mat Ainv = this->getLocalInverse();
@@ -121,7 +121,7 @@ Mat Pose::getDescriptor() {
         for (int axis = 0; axis < 3; axis++) {
             //I think this is what I wanted. OpenCV seems a little arcane at times
             //at least for directly manipulating matrices.
-            descriptor.at<double>(3*i + axis, 0) = vk.at<double>(axis, 0);
+            descriptor.at<double>(3.*i + axis, 0) = vk.at<double>(static_cast<double>(axis), 0);
         }
     }
 
@@ -139,7 +139,7 @@ const Vec3d Pose::getJointPosition(jointnames::jointnames joint) {
     return this->ordered_positions[joint];
 }
 /*
-const Vec3f Pose::getJointPosition(string jointName) {
+const Vec3d Pose::getJointPosition(string jointName) {
     //I should be doing a try-catch block, but I'm assuming I'll never hardcode an invalid
     //get. What I'm worried about is the CMU DB changing their names on me.
     return this->ordered_positions[this->strToJoint(jointName)];

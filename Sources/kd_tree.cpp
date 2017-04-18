@@ -3,6 +3,8 @@
 
 using namespace std;
 
+int kd_tree::max_depth = 0;
+
 kd_tree::kd_tree(int k, UnitCmp cmp) {
     this->k = k;
     //this->data = data;
@@ -21,6 +23,7 @@ kd_tree::kd_tree(std::vector<Unit> origin, int k, UnitCmp cmp) {
 bool kd_tree::leq(Unit a, Unit b, int dim) {
     return a.at<double>(dim, 0) <= b.at<double>(dim, 0);
 }
+
 
 int kd_tree::getPivot(std::vector<Unit> list, int axis) {
     //wikipedia suggested a random sampling's median wasn't half bad
@@ -60,7 +63,18 @@ int kd_tree::getPivot(std::vector<Unit> list, int axis) {
 }
 
 //pretty sure this is n log (n) as it will recurse log(n) times as the pivot ideally splits it
-void kd_tree::build(std::vector<Unit> list, int axis) {
+void kd_tree::build(std::vector<Unit> list, int depth) {
+    if (depth > kd_tree::max_depth)
+        kd_tree::max_depth = depth;
+
+    if (list.size() == 1) {
+        this->data = list[0];
+        this->left = nullptr;
+        this->right = nullptr;
+        return;
+    }
+
+    int axis = depth % this->k;
 
     //select pivot from list
     int pivot = getPivot(list, axis);
@@ -70,26 +84,37 @@ void kd_tree::build(std::vector<Unit> list, int axis) {
     vector<Unit> before, after;
 
     //O(n)
-    for (Unit p : list)
+    for (int i = 0; i < list.size(); i++) {
+        if (i == pivot)
+            continue;
+
+        Unit p = list[i];
         if (leq(p, this->data, axis))
             before.push_back(p);
         else
             after.push_back(p);
+    }
+    //cout << " {"<<axis<<","<< before.size() << "," << after.size() <<"}[ ";
 
     if (before.size() > 0) {
         this->left = new kd_tree(this->k, this->compare);
-        this->left->build(before, (axis + 1) % this->k);
+        this->left->build(before, depth + 1);
     }
     if (after.size() > 0) {
         this->right = new kd_tree(this->k, this->compare);
-        this->right->build(after, (axis + 1) % this->k);
+        this->right->build(after, depth + 1);
     }
+
+    //cout << "]";
 }
 
 //https://en.wikipedia.org/wiki/K-d_tree#Nearest_neighbour_search
-pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int axis, kd_tree * t) {
-    kd_tree * cur_best;
-    double dist;
+pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int depth, kd_tree * t) {
+    kd_tree * cur_best = nullptr;
+    double dist = std::numeric_limits<double>::infinity();
+
+    int axis = depth % this->k;
+    //kd_tree::max_depth++;
 
     //entry * find leaf node
     if (t->leq(p, t->data, axis)) {
@@ -97,7 +122,7 @@ pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int axis, kd_tree *
             return pair<kd_tree *, double>(t, this->compare(p, t->data));
         }
         else {
-            pair<kd_tree *, double> d = nn_search_(p, (axis + 1) % this->k, t->left);
+            pair<kd_tree *, double> d = nn_search_(p, depth + 1 % this->k, t->left);
             cur_best = d.first;
             dist = d.second;
         }
@@ -107,7 +132,7 @@ pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int axis, kd_tree *
             return pair<kd_tree *, double>(t, this->compare(p, t->data));
         }
         else {
-            pair<kd_tree *, double> d = nn_search_(p, (axis + 1) % this->k, t->right);
+            pair<kd_tree *, double> d = nn_search_(p, depth + 1, t->right);
             cur_best = d.first;
             dist = d.second;
         }
@@ -121,17 +146,22 @@ pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int axis, kd_tree *
     }
 
     double split_dist = t->data.at<double>(axis, 0) - p.at<double>(axis, 0);
-    if (abs(split_dist) < dist) {
+    double split_dist_2 = split_dist * split_dist; //only because the comparison/distance function i'm using is actually squared distance. see NN3D.cpp
+
+    //if hypersphere crosses hyperplane
+    if (split_dist_2 < dist) {//should abs() split_dst without ^2
         kd_tree * next;
         if (split_dist < 0)
             next = t->left;//invert from where we came from
         else
             next = t->right;
 
-        pair<kd_tree *, double> other_side =  nn_search_(p, (axis + 1) % this->k, next);
-        if (other_side.second < dist) {
-            dist = other_side.second;
-            cur_best = other_side.first;
+        if (next != nullptr) {
+            pair<kd_tree *, double> other_side = nn_search_(p, (axis + 1) % this->k, next);
+            if (other_side.second < dist) {
+                dist = other_side.second;
+                cur_best = other_side.first;
+            }
         }
     }
 
@@ -139,6 +169,13 @@ pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int axis, kd_tree *
 }
 
 pair<kd_tree::Unit, double> kd_tree::nn_search(Unit p) {
+    //kd_tree::max_depth = 0;
     pair<kd_tree *, double> result = nn_search_(p, 0, this);
+    //cv::Mat m1, m2;
+    //cv::transpose(result.first->data, m1);
+    //cv::transpose(p, m2);
+    //cout << m1 << "\n" << m2 << endl;
+    //cout << max_depth << " " << result.second << endl;
+
     return pair<Unit, double>(result.first->data, result.second);
 }

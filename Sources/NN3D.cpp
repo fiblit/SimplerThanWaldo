@@ -203,15 +203,15 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
 static cv::Scalar boneToColor(bonenames::bonenames bone) {
 
     if (bone == bonenames::HEAD)    return Scalar(.95,.5,.5);
-    else if (bone == bonenames::TORSO)   return Scalar(.85,.5,.5);
-    else if (bone == bonenames::LUPARM)  return Scalar(.35,.5,.5);
-    else if (bone == bonenames::LLOARM)  return Scalar(.25,.5,.5);
+    else if (bone == bonenames::TORSO)   return Scalar(.45,.5,.5);
+    else if (bone == bonenames::LUPARM)  return Scalar(.85,.5,.5);
+    else if (bone == bonenames::LLOARM)  return Scalar(.35,.5,.5);
     else if (bone == bonenames::LUPLEG)  return Scalar(.75,.5,.5);
-    else if (bone == bonenames::LLOLEG)  return Scalar(.65,.5,.5);
-    else if (bone == bonenames::RUPARM)  return Scalar(.15,.5,.5);
-    else if (bone == bonenames::RLOARM)  return Scalar(.05,.5,.5);
-    else if (bone == bonenames::RUPLEG)  return Scalar(.35, .5, .5);
-    else if (bone == bonenames::RLOLEG)  return Scalar(.45, .5, .5);
+    else if (bone == bonenames::LLOLEG)  return Scalar(.05,.5,.5);
+    else if (bone == bonenames::RUPARM)  return Scalar(.65,.5,.5);
+    else if (bone == bonenames::RLOARM)  return Scalar(.25,.5,.5);
+    else if (bone == bonenames::RUPLEG)  return Scalar(.55, .5, .5);
+    else if (bone == bonenames::RLOLEG)  return Scalar(.15, .5, .5);
     else return Scalar(0,0,0);
 }
 
@@ -228,10 +228,10 @@ Mat reproject(Pose solution, Mat camera, int outW, int outH) {
     for (int k = 0; k < bones.size(); k++) {
         Point3d start = joints[bones[k].start];
         Point3d end = joints[bones[k].end];
-        Point2d orth_start = Point2d(start.x, start.y);
-        Point2d orth_end = Point2d(start.x, start.y);
+        Point2d orth_start = Point2d(start.x + center.x, outH-(start.y + center.y));
+        Point2d orth_end = Point2d(end.x + center.x, outH-(end.y + center.y));
         cout << orth_start << " " << orth_end << endl;
-        cv::line(out, orth_start + center, orth_end + center, (255)*boneToColor((bonenames::bonenames)k), 2, 8);
+        cv::line(out, orth_start, orth_end, (255)*boneToColor((bonenames::bonenames)k), 5);
     }
 
     return out;

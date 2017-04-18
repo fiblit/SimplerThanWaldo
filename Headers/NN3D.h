@@ -26,5 +26,7 @@ cv::Mat reproject(Pose solution, cv::Mat virtualCamera, int outW, int outH);
 double pose_similar(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
 double pose_distant(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
 double findANN(Pose p, kd_tree * db);
+double findANN_old(Pose p, MotionDB db);
+
 
 #endif//NN3D_H

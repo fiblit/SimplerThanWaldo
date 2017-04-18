@@ -58,15 +58,14 @@ int main(int argc, char** argv) {
         cout << "  end: " << outJoints[outBones[k].end] << endl;
     }
 
-/*
     //raster solution
     Mat virtualCamera;
-    int outW, outH;
+    int outW = 800, outH = 600;
     // So, for this step, I'd prefer if we could make it an interactive camera
     Mat out = reproject(solution, virtualCamera, outW, outH);
     namedWindow("3D Pose", WINDOW_AUTOSIZE);
     imshow("3D Pose", out);
-*/
+
     cout << "\n DONE \n" << flush;
     for(;;)
         //because waiting 2 hours and then having the window close FUCKING SUCKS

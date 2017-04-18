@@ -24,7 +24,7 @@ bool kd_tree::leq(Unit a, Unit b, int dim) {
     return a.at<double>(dim, 0) <= b.at<double>(dim, 0);
 }
 
-
+//TODO: try sliding midpoint
 int kd_tree::getPivot(std::vector<Unit> list, int axis) {
     //wikipedia suggested a random sampling's median wasn't half bad
     //even median of medians isn't perfect, so this is fine. :P
@@ -109,6 +109,7 @@ void kd_tree::build(std::vector<Unit> list, int depth) {
 }
 
 //https://en.wikipedia.org/wiki/K-d_tree#Nearest_neighbour_search
+//very very very very slow
 pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int depth, kd_tree * t) {
     kd_tree * cur_best = nullptr;
     double dist = std::numeric_limits<double>::infinity();

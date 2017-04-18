@@ -218,7 +218,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
 
         auto ann3 = Clock::now();
         cout << "\tfind ann" << endl;
-        double distance = findANN(guess, kd_tree_of_db);
+        double distance = findANN_old(guess, db);//kd_tree_of_db);
         if (distance < closest) {
             finalPose = guess;//should this maybe instead be the pose found in the ANN?
             closest = distance;
@@ -240,13 +240,39 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     return finalPose;
 }
 
+static cv::Scalar boneToColor(bonenames::bonenames bone) {
+
+    if (bone == bonenames::HEAD)    return Scalar(.95,.5,.5);
+    else if (bone == bonenames::TORSO)   return Scalar(.85,.5,.5);
+    else if (bone == bonenames::LUPARM)  return Scalar(.35,.5,.5);
+    else if (bone == bonenames::LLOARM)  return Scalar(.25,.5,.5);
+    else if (bone == bonenames::LUPLEG)  return Scalar(.75,.5,.5);
+    else if (bone == bonenames::LLOLEG)  return Scalar(.65,.5,.5);
+    else if (bone == bonenames::RUPARM)  return Scalar(.15,.5,.5);
+    else if (bone == bonenames::RLOARM)  return Scalar(.05,.5,.5);
+    else if (bone == bonenames::RUPLEG)  return Scalar(.35, .5, .5);
+    else if (bone == bonenames::RLOLEG)  return Scalar(.45, .5, .5);
+    else return Scalar(0,0,0);
+}
+
 Mat reproject(Pose solution, Mat camera, int outW, int outH) {
+    Mat out = Mat::zeros(outH, outW, CV_8UC3);
     //draw each bone as a projected line using the camera matrix as the projection
     //undoubtedly need more parameters, I'm just lazy.
     //The resulting mat is a 2D image. Should probably just be the projected space of
     //the pose, and another function should actually draw it.
+    
+    vector<Vec3d> joints = solution.getJoints();
+    vector<Bone> bones = solution.getBones();
+    for (int k = 0; k < bones.size(); k++) {
+        Point3d start = joints[bones[k].start];
+        Point3d end = joints[bones[k].end];
+        Point2d orth_start = Point2d(start.x, start.y);
+        Point2d orth_end = Point2d(start.x, start.y);
+        cv::line(out, orth_start, orth_end, boneToColor((bonenames::bonenames)k), 2, 8);
+    }
 
-    return Mat();
+    return out;
 }
 
 //the closer to NUMBONES (i.e. the larger) the better.
@@ -267,8 +293,8 @@ double findANN(Pose guess, kd_tree * db) {
     return result.second;
 }
 
-/*
-double findANN(Pose guess, MotionDB db) {
+
+double findANN_old(Pose guess, MotionDB db) {
     double closest = numeric_limits<double>::lowest();
     Mat guessDesc = guess.getDescriptor();
 
@@ -280,4 +306,4 @@ double findANN(Pose guess, MotionDB db) {
     }
     return closest;
 }
-*/
+

@@ -61,6 +61,7 @@ int kd_tree::getPivot(std::vector<Unit> list, int axis) {
 
 //pretty sure this is n log (n) as it will recurse log(n) times as the pivot ideally splits it
 void kd_tree::build(std::vector<Unit> list, int axis) {
+
     //select pivot from list
     int pivot = getPivot(list, axis);
 
@@ -75,11 +76,14 @@ void kd_tree::build(std::vector<Unit> list, int axis) {
         else
             after.push_back(p);
 
-    this->left = new kd_tree(this->k, this->compare);
-    this->left->build(before, (axis + 1) % this->k);
-
-    this->right = new kd_tree(this->k, this->compare);
-    this->right->build(after, (axis + 1) % this->k);
+    if (before.size() > 0) {
+        this->left = new kd_tree(this->k, this->compare);
+        this->left->build(before, (axis + 1) % this->k);
+    }
+    if (after.size() > 0) {
+        this->right = new kd_tree(this->k, this->compare);
+        this->right->build(after, (axis + 1) % this->k);
+    }
 }
 
 //https://en.wikipedia.org/wiki/K-d_tree#Nearest_neighbour_search
@@ -134,6 +138,7 @@ pair<kd_tree *, double> kd_tree::nn_search_recurse_to_bot(kd_tree::Unit p, int a
     return pair<kd_tree *, double>(cur_best, dist);
 }
 
-kd_tree::Unit kd_tree::nn_search(Unit p) {
-    return nn_search_recurse_to_bot(p, 0, this).first->data;
+pair<kd_tree::Unit, double> kd_tree::nn_search(Unit p) {
+    pair<kd_tree *, double> result = nn_search_recurse_to_bot(p, 0, this);
+    return pair<Unit, double>(result.first->data, result.second);
 }

@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include "MotionParser.h"
 #include "Pose.h"
+#include "kd_tree.h"
 
 /*
 Perform ANN on the pose database using MotionParser to read in motionfiles/searchposes and Pose to represent poses.
@@ -17,13 +18,13 @@ I'll actually do this tomorrow morning. Been a bit busy.
 MotionDB createDB(std::string databasepath);
 
 //some "main" function that takes 2D points and gives back a Pose
-Pose extract3D(std::vector<jointnames::jointnames> labels, std::vector<cv::Point2f> points, std::string databasepath);
+Pose extract3D(std::vector<jointnames::jointnames> labels, std::vector<cv::Point2d> points, std::string databasepath);
 //some projection function from 3D points to 2D Mat image
 cv::Mat reproject(Pose solution, cv::Mat virtualCamera, int outW, int outH);
 
 //see jiang
 double pose_similar(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
 double pose_distant(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
-double findANN(Pose p, MotionDB db);
+double findANN(Pose p, kd_tree * db);
 
 #endif//NN3D_H

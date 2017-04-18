@@ -63,12 +63,12 @@ void MotionParser::updateMotionDB(MotionDB * db) {
 
         string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
 
-        vector<Vec3f> vjp = this->getJointPositions(line);
+        vector<Vec3d> vjp = this->getJointPositions(line);
 
         Pose p = Pose(this->currentJointNames, vjp);
 
         vector<Bone> bones = p.getBones();
-        vector<Vec3f> joints = p.getJoints();
+        vector<Vec3d> joints = p.getJoints();
         for (int i = 0; i < bonenames::NUMBONES; i++) {
             Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
             double len = sqrt(diff.dot(diff));
@@ -100,9 +100,9 @@ MotionDB MotionParser::getMiniMotionDB() {
         mini_db.descs.push_back(p.getDescriptor());
 
         vector<Bone> bones = p.getBones();
-        vector<Vec3f> joints = p.getJoints();
+        vector<Vec3d> joints = p.getJoints();
         for (int i = 0; i < bonenames::NUMBONES; i++) {
-            Vec3f diff = joints[bones[i].end] - joints[bones[i].start];
+            Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
             double len = sqrt(diff.dot(diff));
             mini_db.avgBoneLength[i] = (len + poseCount * mini_db.avgBoneLength[i]) / (poseCount + 1);
         }
@@ -183,20 +183,20 @@ vector<string> MotionParser::getJointNames(string header) {
     return names;
 }
 
-vector<Vec3f> MotionParser::getJointPositions(string line) {
-    vector<Vec3f> positions;
+vector<Vec3d> MotionParser::getJointPositions(string line) {
+    vector<Vec3d> positions;
 
-    float posf[3] = {0,0,0};
+    double posf[3] = {0,0,0};
     int i = 0;
     for (size_t afterLastSplit = 0, nextSplitEnd = 0;
         (nextSplitEnd = line.find(',', afterLastSplit)) != string::npos
         && nextSplitEnd != afterLastSplit;//eol
         afterLastSplit = nextSplitEnd + 1) {
         string val = line.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
-        posf[i++] = stof(val);
+        posf[i++] = stod(val);
 
         if (i == 3) {
-            positions.push_back(Vec3f(posf[0], posf[1], posf[2]));
+            positions.push_back(Vec3d(posf[0], posf[1], posf[2]));
             i = 0;
         }
     }

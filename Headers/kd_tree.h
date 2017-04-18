@@ -14,7 +14,7 @@ public:
     kd_tree(int k, UnitCmp cmp);
     kd_tree(std::vector<Unit> origin, int k, UnitCmp cmp);
     void build(std::vector<Unit> list, int axis);
-    Unit nn_search(Unit p);
+    std::pair<Unit, double> nn_search(Unit p);
 private:
     int getPivot(std::vector<Unit> list, int axis);
     bool leq(Unit a, Unit b, int dim);

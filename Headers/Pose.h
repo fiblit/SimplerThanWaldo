@@ -35,22 +35,22 @@ struct Bone {
 class Pose {
 public:
     Pose();
-    Pose(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
+    Pose(std::vector<std::string> names, std::vector<cv::Vec3d> positions);
     
-    void jointInit(std::vector<jointnames::jointnames> labels, std::vector<cv::Vec3f> positions);
-    Pose(std::vector<cv::Vec3f> positions);
-    Pose(std::vector<jointnames::jointnames> labels, std::vector<cv::Vec3f> positions);
+    void jointInit(std::vector<jointnames::jointnames> labels, std::vector<cv::Vec3d> positions);
+    Pose(std::vector<cv::Vec3d> positions);
+    Pose(std::vector<jointnames::jointnames> labels, std::vector<cv::Vec3d> positions);
 
     //I might need a copy constructor...
     ~Pose();
-    const cv::Vec3f getJointPosition(jointnames::jointnames joint);
+    const cv::Vec3d getJointPosition(jointnames::jointnames joint);
     //const cv::Vec3f getJointPosition(std::string jointName);
     std::vector<Bone> getBones();
-    std::vector<cv::Vec3f> getJoints();
+    std::vector<cv::Vec3d> getJoints();
 
     //should probably be in NN3D
     cv::Mat getLocalInverse();
-    std::vector<cv::Vec3f> normLocToHip();
+    std::vector<cv::Vec3d> normLocToHip();
     cv::Mat getDescriptor();
 
     //enum converters
@@ -61,12 +61,12 @@ public:
     void print();
 
 private:
-    std::vector<cv::Vec3f> filterJoints(std::vector<std::string> names, std::vector<cv::Vec3f> positions);
+    std::vector<cv::Vec3d> filterJoints(std::vector<std::string> names, std::vector<cv::Vec3d> positions);
     std::vector<Bone> filterBones();
 
     //these are ordered by their enumerators
     //float is always float[3]
-    std::vector<cv::Vec3f> ordered_positions;
+    std::vector<cv::Vec3d> ordered_positions;
     std::vector<Bone> ordered_bones;
 };
 

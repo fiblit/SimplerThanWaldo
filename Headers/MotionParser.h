@@ -40,7 +40,7 @@ private:
 
     void close();
     std::vector<std::string> getJointNames(std::string header);
-    std::vector<cv::Vec3f> getJointPositions(std::string line);
+    std::vector<cv::Vec3d> getJointPositions(std::string line);
 };
 
 std::vector<std::string> split(std::string s, char delim);

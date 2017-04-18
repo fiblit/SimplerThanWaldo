@@ -104,14 +104,14 @@ typedef std::chrono::high_resolution_clock Clock;
 
 //based on jiang
 //labels.size() MUST equal points.size()
-Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, string dbpath) {
+Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, string dbpath) {
     auto t_start = Clock::now();
 
     //create 2D Pose
-    vector<Vec3f> points3D = vector<Vec3f>(points.size());
+    vector<Vec3d> points3D = vector<Vec3d>(points.size());
     for (int i = 0; i < points.size(); i++)
         //the hip should be at 0 depth
-        points3D[i] = Vec3f(points[i].x, points[i].y, 0);
+        points3D[i] = Vec3d(points[i].x, points[i].y, 0);
 
     Pose estimate2D(labels, points3D);
     //estimate2D.print();
@@ -141,7 +141,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         << chrono::duration_cast<chrono::nanoseconds>(t1 - t_).count() / 1000000000.
         << endl;
     vector<Bone> bones2D = estimate2D.getBones();
-    vector<Vec3f> joints2D = estimate2D.getJoints();//different order than points3D
+    vector<Vec3d> joints2D = estimate2D.getJoints();//different order than points3D
     auto t2 = Clock::now();
     cout << "bones & joints: ";
     estimate2D.print();
@@ -183,6 +183,12 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
         << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
         << endl;
 
+    kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);
+    auto t4_1 = Clock::now();
+    cout << "after kd tree construction in "
+        << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
+        << endl;
+
     Pose finalPose;
     double mostSimilar = numeric_limits<double>::lowest();
     //for each possible flipping of the points' 3D coordinates signs
@@ -190,7 +196,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
 
     //could be parallelised, however the biggest speed up would come from a spatial data strucutre as that's O(n) -> O(log n)
     for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << bonenames::NUMBONES); boneDepthSign++) {
-        vector<Vec3f> guessPositions = joints2D;
+        vector<Vec3d> guessPositions = joints2D;
         vector<Bone> guessBones = bones2D;
 
         auto ann1 = Clock::now();
@@ -210,7 +216,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
 
         auto ann3 = Clock::now();
         cout << "\tfind ann" << endl;
-        double similarity = findANN(guess, db);
+        double similarity = findANN(guess, kd_tree_of_db);
         if (similarity > mostSimilar) {
             finalPose = guess;
             mostSimilar = similarity;
@@ -252,28 +258,23 @@ double pose_distant(Mat pd1, Mat pd2) {
 }
 
 //not actually *approximate* yet. I was going to read some locality-sensitive hashing stuff for that.
-double findANN(Pose guess, MotionDB db) {
+double findANN(Pose guess, kd_tree * db) {
+    Mat guessDesc = guess.getDescriptor();
+    pair<cv::Mat, double> result = db->nn_search(guessDesc);
+    return result.second;
+}
 
-    //auto t1 = Clock::now();
+/*
+double findANN(Pose guess, MotionDB db) {
     double closest = numeric_limits<double>::lowest();
     Mat guessDesc = guess.getDescriptor();
 
     //while there are motion files
     for (Mat desc : db.descs) {
-        //uto t1 = Clock::now();
-
         //nearest neighbour's distance; jiang's method doesn't care what the real pose looks like.
         //His method just cares that the guessed pose is close to a real pose.
         closest = max(closest, pose_similar(guessDesc, desc));
-     //   auto t2 = Clock::now();;
-     //   cout << "\tNNcomp in "
-     //       << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
-    //        << endl;
     }
-
-    //auto t2 = Clock::now();
-    //cout << "NN in "
-    //    << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
-    //    << endl;
     return closest;
 }
+*/

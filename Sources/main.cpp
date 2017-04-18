@@ -28,16 +28,16 @@ int main(int argc, char** argv) {
         j::RFEMUR, j::RTIBIA, j::RFOOT //r leg
     };
 
-    float s = 50.f; //pretty sure it doesn't matter
-    vector<Point2f> points = {
-        Point2f( 0*s,  0*s), Point2f( 0*s,  5*s), Point2f( 0*s,  6*s),//spine
-        Point2f( 1*s,  5*s), Point2f( 2*s,  3*s), Point2f( 2*s,  0*s),//l arm
-        Point2f( 1*s, -1*s), Point2f( 1*s, -3*s), Point2f( 1*s, -5*s),//l leg
-        Point2f(-1*s,  5*s), Point2f(-2*s,  3*s), Point2f(-2*s,  0*s),//r arm
-        Point2f(-1*s, -1*s), Point2f(-1*s, -3*s), Point2f(-1*s, -5*s)//r leg
+    double s = 50.; //pretty sure it doesn't matter
+    vector<Point2d> points = {
+        Point2d( 0*s,  0*s), Point2d( 0*s,  5*s), Point2d( 0*s,  6*s),//spine
+        Point2d( 1*s,  5*s), Point2d( 2*s,  3*s), Point2d( 2*s,  0*s),//l arm
+        Point2d( 1*s, -1*s), Point2d( 1*s, -3*s), Point2d( 1*s, -5*s),//l leg
+        Point2d(-1*s,  5*s), Point2d(-2*s,  3*s), Point2d(-2*s,  0*s),//r arm
+        Point2d(-1*s, -1*s), Point2d(-1*s, -3*s), Point2d(-1*s, -5*s)//r leg
     };
 
-    string databasepath = "E:/djdjh/Documents/Classes/Research/allasfamc/all_asfamc/csvpose";
+    string databasepath = (PROJECT_SOURCE_DIR) + (std::string)"/../csvpose_mini";
 
     cout << "initialization complete" << endl;
 
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
          << "s" << endl;
 
     //temporary debug output
-    vector<Vec3f> outJoints = solution.getJoints();
+    vector<Vec3d> outJoints = solution.getJoints();
     vector<Bone> outBones = solution.getBones();
     for (int k = 0; k < outBones.size(); k++) {
         cout << "start: " << outJoints[outBones[k].start];

@@ -8,7 +8,7 @@ typedef std::chrono::high_resolution_clock Clock;
 using namespace std;
 using namespace cv;
 
-Pose::Pose(vector<string> names, vector<Vec3f> positions) {
+Pose::Pose(vector<string> names, vector<Vec3d> positions) {
     this->ordered_positions = this->filterJoints(names, positions);
     this->ordered_bones = this->filterBones();
 }
@@ -17,21 +17,21 @@ Pose::Pose() {
 }
 
 
-void Pose::jointInit(vector<jointnames::jointnames> labels, vector<Vec3f> positions) {
+void Pose::jointInit(vector<jointnames::jointnames> labels, vector<Vec3d> positions) {
     if (labels.size() != positions.size())
         throw runtime_error("must be equal joints");
 
-    this->ordered_positions = vector<Vec3f>(jointnames::NUMJOINTS);
+    this->ordered_positions = vector<Vec3d>(jointnames::NUMJOINTS);
     for (int i = 0; i < labels.size(); i++)
         ordered_positions[labels[i]] = positions[i];
     this->ordered_bones = this->filterBones();
 }
 
-Pose::Pose(vector<jointnames::jointnames> labels, vector<Vec3f> positions) {
+Pose::Pose(vector<jointnames::jointnames> labels, vector<Vec3d> positions) {
     this->jointInit(labels, positions);
 }
 
-Pose::Pose(vector<Vec3f> positions) {
+Pose::Pose(vector<Vec3d> positions) {
     vector<jointnames::jointnames> labels = vector<jointnames::jointnames>(jointnames::NUMJOINTS);
     for (int i = 0; i < jointnames::NUMJOINTS; i++)
         labels[i] = (jointnames::jointnames)i;
@@ -43,11 +43,11 @@ Pose::~Pose() {
     //nameiter.clear();
 }
 
-vector<Vec3f> Pose::filterJoints(vector<string> names, vector<Vec3f> positions) {
+vector<Vec3d> Pose::filterJoints(vector<string> names, vector<Vec3d> positions) {
     //trade safety for speed
     //if (names.size() != positions.size())
     //    throw runtime_error("must be equal joints");
-    vector<Vec3f> filteredPositions(jointnames::NUMJOINTS);
+    vector<Vec3d> filteredPositions(jointnames::NUMJOINTS);
     for (int i = 0; i < names.size(); i++) {
         jointnames::jointnames currentJoint;
         currentJoint = this->strToJoint(names[i]);
@@ -76,8 +76,8 @@ vector<Bone> Pose::filterBones() {
     return filteredBones;
 }
 
-vector<Vec3f> Pose::normLocToHip() {
-    vector<Vec3f> normed;
+vector<Vec3d> Pose::normLocToHip() {
+    vector<Vec3d> normed;
     for (int i = 0; i < this->ordered_positions.size(); i++)
         normed.push_back(this->ordered_positions[i] - this->ordered_positions[jointnames::HIP]);
     return normed;
@@ -113,7 +113,7 @@ Mat Pose::getDescriptor() {
 
     for (int i = 0; i < this->ordered_bones.size(); i++) {
         Bone u = this->ordered_bones[i];
-        Vec3f uk = this->ordered_positions[u.end] - this->ordered_positions[u.start];
+        Vec3d uk = this->ordered_positions[u.end] - this->ordered_positions[u.start];
         //this is one spot where jiang's method simplifies things. Normalizing the torso's 
         //orientation allows for the algorithm to ignore camera orientation relative to the person.
         Mat vk = Ainv * Mat(uk);
@@ -121,7 +121,7 @@ Mat Pose::getDescriptor() {
         for (int axis = 0; axis < 3; axis++) {
             //I think this is what I wanted. OpenCV seems a little arcane at times
             //at least for directly manipulating matrices.
-            descriptor.at<float>(3*i + axis, 0) = vk.at<float>(axis, 0);
+            descriptor.at<double>(3*i + axis, 0) = vk.at<double>(axis, 0);
         }
     }
 
@@ -129,13 +129,13 @@ Mat Pose::getDescriptor() {
 }
 
 //only for queries
-vector<Vec3f> Pose::getJoints() {
+vector<Vec3d> Pose::getJoints() {
     return this->ordered_positions;
 }
 vector<Bone> Pose::getBones() {
     return this->ordered_bones;
 }
-const Vec3f Pose::getJointPosition(jointnames::jointnames joint) {
+const Vec3d Pose::getJointPosition(jointnames::jointnames joint) {
     return this->ordered_positions[joint];
 }
 /*
@@ -221,7 +221,7 @@ jointnames::jointnames Pose::strToJoint(std::string name) {
 void Pose::print() {
 
     vector<Bone> bones = this->getBones();
-    vector<Vec3f> joints = this->getJoints();
+    vector<Vec3d> joints = this->getJoints();
     for (int k = 0; k < bones.size(); k++)
         cout << joints[bones[k].start] << "->" << joints[bones[k].end] << endl;
 

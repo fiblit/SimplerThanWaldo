@@ -182,6 +182,13 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     cout << "after orthographic depth diff in " 
         << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
         << endl;
+    
+    kd_tree * kd_tree_of_db = new kd_tree(db.descs, db.descs[0].rows, pose_distant);
+
+    auto t4_1 = Clock::now();
+    cout << "after kd tree construction in "
+        << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
+        << endl;
 
     kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);
     auto t4_1 = Clock::now();
@@ -190,7 +197,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
         << endl;
 
     Pose finalPose;
-    double mostSimilar = numeric_limits<double>::lowest();
+    double closest = numeric_limits<double>::infinity();
     //for each possible flipping of the points' 3D coordinates signs
     //a bit-level 0 means negative, a 1 means positive
 
@@ -216,10 +223,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
 
         auto ann3 = Clock::now();
         cout << "\tfind ann" << endl;
-        double similarity = findANN(guess, kd_tree_of_db);
-        if (similarity > mostSimilar) {
-            finalPose = guess;
-            mostSimilar = similarity;
+        double distance = findANN(guess, kd_tree_of_db);
+        if (distance < closest) {
+            finalPose = guess;//should this maybe instead be the pose found in the ANN?
+            closest = distance;
         }
         auto ann4 = Clock::now();
         cout << "\t in "
@@ -238,6 +245,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     return finalPose;
 }
 
+//TODO: this...
 Mat reproject(Pose solution, Mat camera, int outW, int outH) {
     //draw each bone as a projected line using the camera matrix as the projection
     //undoubtedly need more parameters, I'm just lazy.

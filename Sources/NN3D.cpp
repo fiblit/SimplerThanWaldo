@@ -182,9 +182,16 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     cout << "after orthographic depth diff in " 
         << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
         << endl;
+    
+    kd_tree * kd_tree_of_db = new kd_tree(db.descs, db.descs[0].rows, pose_distant);
+
+    auto t4_1 = Clock::now();
+    cout << "after kd tree construction in "
+        << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
+        << endl;
 
     Pose finalPose;
-    double mostSimilar = numeric_limits<double>::lowest();
+    double closest = numeric_limits<double>::infinity();
     //for each possible flipping of the points' 3D coordinates signs
     //a bit-level 0 means negative, a 1 means positive
 
@@ -210,10 +217,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
 
         auto ann3 = Clock::now();
         cout << "\tfind ann" << endl;
-        double similarity = findANN(guess, db);
-        if (similarity > mostSimilar) {
-            finalPose = guess;
-            mostSimilar = similarity;
+        double distance = findANN(guess, kd_tree_of_db);
+        if (distance < closest) {
+            finalPose = guess;//should this maybe instead be the pose found in the ANN?
+            closest = distance;
         }
         auto ann4 = Clock::now();
         cout << "\t in "
@@ -232,6 +239,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2f> points, st
     return finalPose;
 }
 
+//TODO: this...
 Mat reproject(Pose solution, Mat camera, int outW, int outH) {
     //draw each bone as a projected line using the camera matrix as the projection
     //undoubtedly need more parameters, I'm just lazy.
@@ -251,29 +259,27 @@ double pose_distant(Mat pd1, Mat pd2) {
     return diff.dot(diff); //==||diff||^2
 }
 
-//not actually *approximate* yet. I was going to read some locality-sensitive hashing stuff for that.
-double findANN(Pose guess, MotionDB db) {
+double findANN(Pose guess, kd_tree * db) {
+    // shouldn't the db's poses get processed like the guess in some way?
+    Mat guessDesc = guess.getDescriptor();
 
-    //auto t1 = Clock::now();
+    pair<kd_tree *, double> result = db->nn_search(guessDesc);
+    return result.second;
+}
+
+//not actually *approximate* yet. I was going to read some locality-sensitive hashing stuff for that.
+/*
+double findANN(Pose guess, kd_tree * db) {
     double closest = numeric_limits<double>::lowest();
     Mat guessDesc = guess.getDescriptor();
 
     //while there are motion files
     for (Mat desc : db.descs) {
-        //uto t1 = Clock::now();
-
         //nearest neighbour's distance; jiang's method doesn't care what the real pose looks like.
         //His method just cares that the guessed pose is close to a real pose.
         closest = max(closest, pose_similar(guessDesc, desc));
-     //   auto t2 = Clock::now();;
-     //   cout << "\tNNcomp in "
-     //       << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
-    //        << endl;
     }
 
-    //auto t2 = Clock::now();
-    //cout << "NN in "
-    //    << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
-    //    << endl;
     return closest;
 }
+*/

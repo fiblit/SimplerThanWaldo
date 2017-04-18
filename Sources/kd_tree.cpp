@@ -83,7 +83,7 @@ void kd_tree::build(std::vector<Unit> list, int axis) {
 }
 
 //https://en.wikipedia.org/wiki/K-d_tree#Nearest_neighbour_search
-pair<kd_tree *, double> kd_tree::nn_search_recurse_to_bot(kd_tree::Unit p, int axis, kd_tree * t) {
+pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int axis, kd_tree * t) {
     kd_tree * cur_best;
     double dist;
 
@@ -93,7 +93,7 @@ pair<kd_tree *, double> kd_tree::nn_search_recurse_to_bot(kd_tree::Unit p, int a
             return pair<kd_tree *, double>(t, this->compare(p, t->data));
         }
         else {
-            pair<kd_tree *, double> d = nn_search_recurse_to_bot(p, (axis + 1) % this->k, t->left);
+            pair<kd_tree *, double> d = nn_search_(p, (axis + 1) % this->k, t->left);
             cur_best = d.first;
             dist = d.second;
         }
@@ -103,7 +103,7 @@ pair<kd_tree *, double> kd_tree::nn_search_recurse_to_bot(kd_tree::Unit p, int a
             return pair<kd_tree *, double>(t, this->compare(p, t->data));
         }
         else {
-            pair<kd_tree *, double> d = nn_search_recurse_to_bot(p, (axis + 1) % this->k, t->right);
+            pair<kd_tree *, double> d = nn_search_(p, (axis + 1) % this->k, t->right);
             cur_best = d.first;
             dist = d.second;
         }
@@ -124,7 +124,7 @@ pair<kd_tree *, double> kd_tree::nn_search_recurse_to_bot(kd_tree::Unit p, int a
         else
             next = t->right;
 
-        pair<kd_tree *, double> other_side =  nn_search_recurse_to_bot(p, (axis + 1) % this->k, next);
+        pair<kd_tree *, double> other_side =  nn_search_(p, (axis + 1) % this->k, next);
         if (other_side.second < dist) {
             dist = other_side.second;
             cur_best = other_side.first;
@@ -134,6 +134,6 @@ pair<kd_tree *, double> kd_tree::nn_search_recurse_to_bot(kd_tree::Unit p, int a
     return pair<kd_tree *, double>(cur_best, dist);
 }
 
-kd_tree::Unit kd_tree::nn_search(Unit p) {
-    return nn_search_recurse_to_bot(p, 0, this).first->data;
+pair<kd_tree *, double> kd_tree::nn_search(kd_tree::Unit p) {
+    return nn_search_(p, 0, this); 
 }

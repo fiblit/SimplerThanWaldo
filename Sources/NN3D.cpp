@@ -22,43 +22,8 @@ MotionDB createDB(string path) {
         MotionParser mp;
         //load file into MotionParser
         if (!is_directory(p.path())) {
-
-            //cout << "\tmp start " << p.path().filename().string() << endl;
-            //auto mpt1 = Clock::now();
-
             mp.open(p.path().string());
-
-            //cout << "\t\tmp update start" << p.path().filename().string() << endl;
-            //auto mpt_1 = Clock::now();
             mp.updateMotionDB(&db);
-            //auto mpt_2 = Clock::now();
-            //cout << "\t\tmp update in "
-            //    << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-            //    << endl;
-
-            /*
-            cout << "\t\tmp get start " << p.path().filename().string() << endl;
-            auto mpt_1 = Clock::now();
-            MotionDB poses = mp.getMiniMotionDB();
-            auto mpt_2 = Clock::now();
-            cout << "\t\tmp get in "
-                << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-                << endl;
-
-            cout << "\t\tmp merge start " << p.path().filename().string() << endl;
-            mpt_1 = Clock::now();
-            mp.mergeMotionDB(&db, poses);
-            mpt_2 = Clock::now();
-            cout << "\t\tmp merge in "
-                << chrono::duration_cast<chrono::nanoseconds>(mpt_2 - mpt_1).count()
-                << endl;
-
-            auto mpt2 = Clock::now();
-            cout << "\tmp in "
-                << chrono::duration_cast<chrono::nanoseconds>(mpt2 - mpt1).count()
-                << endl;
-            */
-            
         }
     }
     auto t2 = Clock::now();
@@ -78,7 +43,6 @@ vector<double> getAvgBoneLength(MotionDB db) {
     for (int i = 0; i < bonenames::NUMBONES; i++)
         runningAvg[i] = 0;
 
-    auto t1 = Clock::now();
     //while there are poses
     for (Pose p : db) {
         vector<Bone> bones = p.getBones();
@@ -90,10 +54,6 @@ vector<double> getAvgBoneLength(MotionDB db) {
         }
         poseCount++;
     }
-    auto t2 = Clock::now();
-    cout << "search"
-        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()
-        << endl;
 
     return runningAvg;
 }
@@ -264,12 +224,14 @@ Mat reproject(Pose solution, Mat camera, int outW, int outH) {
     
     vector<Vec3d> joints = solution.getJoints();
     vector<Bone> bones = solution.getBones();
+    Point2d center(outW / 2, outH / 2);
     for (int k = 0; k < bones.size(); k++) {
         Point3d start = joints[bones[k].start];
         Point3d end = joints[bones[k].end];
         Point2d orth_start = Point2d(start.x, start.y);
         Point2d orth_end = Point2d(start.x, start.y);
-        cv::line(out, orth_start, orth_end, boneToColor((bonenames::bonenames)k), 2, 8);
+        cout << orth_start << " " << orth_end << endl;
+        cv::line(out, orth_start + center, orth_end + center, (255)*boneToColor((bonenames::bonenames)k), 2, 8);
     }
 
     return out;

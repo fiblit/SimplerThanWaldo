@@ -122,7 +122,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
 
     auto t3 = Clock::now();
     cout << "scale : " << s << endl;
-    cout << "after get scale in " 
+    cout << "after get scale in "
         << chrono::duration_cast<chrono::nanoseconds>(t3 - t2).count() / 1000000000.
         << endl;
 
@@ -144,12 +144,12 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
         << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
         << endl;
 
-    kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
-    cout << "max_depth: " << kd_tree::max_depth << endl;
-    auto t4_1 = Clock::now();
-    cout << "after kd tree construction in "
-        << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
-        << endl;
+    //kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
+    //cout << "max_depth: " << kd_tree::max_depth << endl;
+    //auto t4_1 = Clock::now();
+    //cout << "after kd tree construction in "
+    //    << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
+    //    << endl;
 
     Pose finalPose;
     double closest = numeric_limits<double>::infinity();
@@ -168,6 +168,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
             //the bonenames are ordered in such a way that this will work fine
             //end.z = (sign)dZ + start.z
             guessPositions[guessBones[k].end][2] = static_cast<float>((sign ? 1 : -1) * depthDiff[k] + guessPositions[guessBones[k].start][2]);
+            if ((bonenames::bonenames)k == bonenames::TORSO) {
+                guessPositions[guessBones[bonenames::LUPARM].start][2] += static_cast<float>(sign ? 1 : -1) * depthDiff[k];
+                guessPositions[guessBones[bonenames::RUPARM].start][2] += static_cast<float>(sign ? 1 : -1) * depthDiff[k];
+            }
         }
 
         Pose guess(guessPositions);
@@ -215,26 +219,37 @@ static cv::Scalar boneToColor(bonenames::bonenames bone) {
     else return Scalar(0,0,0);
 }
 
-Mat reproject(Pose solution, Mat camera, int outW, int outH) {
-    Mat out = Mat::zeros(outH, outW, CV_8UC3);
+Mat reproject(Pose solution, Mat camera, Vec2i size) {
+    Mat out = Mat::zeros(size[1], size[0], CV_8UC3);
     //draw each bone as a projected line using the camera matrix as the projection
     //undoubtedly need more parameters, I'm just lazy.
     //The resulting mat is a 2D image. Should probably just be the projected space of
     //the pose, and another function should actually draw it.
     
     vector<Vec3d> joints = solution.getJoints();
+
+    for (int j = 0; j < joints.size(); j++) {
+        Mat p = camera * Mat(Vec4d(joints[j][0], joints[j][1], joints[j][2], 1));
+        joints[j] = Vec3d(p.at<double>(0,0), p.at<double>(1,0), p.at<double>(2,0));
+    }
+
     vector<Bone> bones = solution.getBones();
-    Point2d center(outW / 2, outH / 2);
+    Vec2i center(size[0] / 2, size[1] / 2);
     for (int k = 0; k < bones.size(); k++) {
         Point3d start = joints[bones[k].start];
         Point3d end = joints[bones[k].end];
-        Point2d orth_start = Point2d(start.x + center.x, outH-(start.y + center.y));
-        Point2d orth_end = Point2d(end.x + center.x, outH-(end.y + center.y));
-        cout << orth_start << " " << orth_end << endl;
-        cv::line(out, orth_start, orth_end, (255)*boneToColor((bonenames::bonenames)k), 5);
+
+        Point2d orth_start = Point2d(start.x + center[0], size[1]-(start.y + center[1]));
+        Point2d orth_end = Point2d(end.x + center[0], size[1]-(end.y + center[1]));
+        //cout << start << " " << end << endl;
+        //cout << " " << orth_start << " " << orth_end << endl;
+        cv::line(out, orth_start, orth_end, boneToColor((bonenames::bonenames)k).mul(Scalar(180,255,255)), 5);
     }
 
-    return out;
+    Mat hsl_out;
+    cv::cvtColor(out, hsl_out, CV_HLS2BGR);
+
+    return hsl_out;
 }
 
 //the closer to NUMBONES (i.e. the larger) the better.

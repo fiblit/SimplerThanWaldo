@@ -20,7 +20,7 @@ MotionDB createDB(std::string databasepath);
 //some "main" function that takes 2D points and gives back a Pose
 Pose extract3D(std::vector<jointnames::jointnames> labels, std::vector<cv::Point2d> points, std::string databasepath);
 //some projection function from 3D points to 2D Mat image
-cv::Mat reproject(Pose solution, cv::Mat virtualCamera, int outW, int outH);
+cv::Mat reproject(Pose solution, cv::Mat virtualCamera, cv::Vec2i size);
 
 //see jiang
 double pose_similar(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);

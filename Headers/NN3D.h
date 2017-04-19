@@ -14,10 +14,10 @@ I may pre-read the poses so as to structure them into a spatial data-structure.
 I'll actually do this tomorrow morning. Been a bit busy.
 */
 
-
 MotionDB createDB(std::string databasepath);
 
 //some "main" function that takes 2D points and gives back a Pose
+Pose extract3D_from_Pose_2D(Pose_2D pose, std::string databasepath);
 Pose extract3D(std::vector<jointnames::jointnames> labels, std::vector<cv::Point2d> points, std::string databasepath);
 //some projection function from 3D points to 2D Mat image
 cv::Mat reproject(Pose solution, cv::Mat virtualCamera, cv::Vec2i size);

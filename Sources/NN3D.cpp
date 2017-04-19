@@ -9,6 +9,35 @@ using namespace std::experimental::filesystem;
 #include <chrono>
 typedef std::chrono::high_resolution_clock Clock;
 
+static pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_joints(Pose_2D p) {
+    vector<jointnames::jointnames> labels;
+    vector<Point2d> joints;
+
+    namespace j = jointnames;
+    vector<j::jointnames> labels = {
+        j::HIP, j::CLAVICLE, j::HEAD_END, //spine, there is also a HEAD joint, that I may switch HEAD_END to
+        j::LHUMERUS, j::LRADIUS, j::LWRIST, //l arm
+        j::LFEMUR, j::LTIBIA, j::LFOOT, //l leg
+        j::RHUMERUS, j::RRADIUS, j::RWRIST, //r arm
+        j::RFEMUR, j::RTIBIA, j::RFOOT //r leg
+    };
+
+    vector<Point2d> points = {
+        Point2d(p.C_Hip), Point2d(p.C_Chest), Point2d(p.Head_Top),//spine
+        Point2d(p.L_Chest), Point2d(p.L_Elbow), Point2d(p.L_Wrist),//l arm
+        Point2d(p.L_Hip), Point2d(p.L_Knee), Point2d(p.L_Ankle),//l leg
+        Point2d(p.R_Chest), Point2d(p.R_Elbow), Point2d(p.R_Wrist),//r arm
+        Point2d(p.R_Hip), Point2d(p.R_Knee), Point2d(p.R_Ankle)//r leg
+    };
+
+    return make_pair(labels, joints);
+}
+
+Pose extract3D_from_Pose_2D(Pose_2D pose, std::string databasepath) {
+    pair<vector<jointnames::jointnames>, vector<Point2d>> result = Pose_2D_to_labeled_joints(pose);
+    return extract3D(result.first, result.second, databasepath);
+}
+
 //TODO: also return meta information(like avg bone lengths)/an actual class/struct for the DB
 MotionDB createDB(string path) {
     MotionDB db;

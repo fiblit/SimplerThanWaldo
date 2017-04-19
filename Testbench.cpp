@@ -15,7 +15,7 @@ using namespace cv;
 using namespace std;
 
 
-struct Pose
+struct Pose_2D
 {
 	int Initialized_Positions;
 	Point Head_Top;
@@ -38,123 +38,123 @@ struct Pose
 
 
 
-void MouseCallBackFunc(int event, int x, int y, int flags, void* Current_Pose_Ptr)
+void MouseCallBackFunc(int event, int x, int y, int flags, void* Current_Pose_2D_Ptr)
 {
 	if  ( event == EVENT_LBUTTONDOWN )
 	{
-		Pose* Current_Pose = (Pose*)Current_Pose_Ptr;
+		Pose_2D* Current_Pose_2D = (Pose_2D*)Current_Pose_2D_Ptr;
 		
-		switch(Current_Pose->Initialized_Positions)
+		switch(Current_Pose_2D->Initialized_Positions)
 		{
 			case 0: 
 			{
-				Current_Pose->Head_Top.x = x;
-				Current_Pose->Head_Top.y = y;
+				Current_Pose_2D->Head_Top.x = x;
+				Current_Pose_2D->Head_Top.y = y;
 				cout << "Top of Head Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 1: 
 			{
-				Current_Pose->Head_Bot.x = x;
-				Current_Pose->Head_Bot.y = y;
+				Current_Pose_2D->Head_Bot.x = x;
+				Current_Pose_2D->Head_Bot.y = y;
 				cout << "Bottom of Head Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 2: 
 			{
-				Current_Pose->C_Chest.x = x;
-				Current_Pose->C_Chest.y = y;
+				Current_Pose_2D->C_Chest.x = x;
+				Current_Pose_2D->C_Chest.y = y;
 				cout << "Chest Center Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 3: 
 			{
-				Current_Pose->L_Chest.x = x;
-				Current_Pose->L_Chest.y = y;
+				Current_Pose_2D->L_Chest.x = x;
+				Current_Pose_2D->L_Chest.y = y;
 				cout << "Left Shoulder Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 4: 
 			{
-				Current_Pose->R_Chest.x = x;
-				Current_Pose->R_Chest.y = y;
+				Current_Pose_2D->R_Chest.x = x;
+				Current_Pose_2D->R_Chest.y = y;
 				cout << "Right Shoulder Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 5: 
 			{
-				Current_Pose->C_Hip.x = x;
-				Current_Pose->C_Hip.y = y;
+				Current_Pose_2D->C_Hip.x = x;
+				Current_Pose_2D->C_Hip.y = y;
 				cout << "Center of Hip Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 6: 
 			{
-				Current_Pose->L_Hip.x = x;
-				Current_Pose->L_Hip.y = y;
+				Current_Pose_2D->L_Hip.x = x;
+				Current_Pose_2D->L_Hip.y = y;
 				cout << "Left Side of Hip Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 7: 
 			{
-				Current_Pose->R_Hip.x = x;
-				Current_Pose->R_Hip.y = y;
+				Current_Pose_2D->R_Hip.x = x;
+				Current_Pose_2D->R_Hip.y = y;
 				cout << "Right Side of Hip Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 8: 
 			{
-				Current_Pose->L_Elbow.x = x;
-				Current_Pose->L_Elbow.y = y;
+				Current_Pose_2D->L_Elbow.x = x;
+				Current_Pose_2D->L_Elbow.y = y;
 				cout << "Left Elbow Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 9: 
 			{
-				Current_Pose->L_Wrist.x = x;
-				Current_Pose->L_Wrist.y = y;
+				Current_Pose_2D->L_Wrist.x = x;
+				Current_Pose_2D->L_Wrist.y = y;
 				cout << "Left Wrist Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 10: 
 			{
-				Current_Pose->R_Elbow.x = x;
-				Current_Pose->R_Elbow.y = y;
+				Current_Pose_2D->R_Elbow.x = x;
+				Current_Pose_2D->R_Elbow.y = y;
 				cout << "Right Elbow Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 11: 
 			{
-				Current_Pose->R_Wrist.x = x;
-				Current_Pose->R_Wrist.y = y;
+				Current_Pose_2D->R_Wrist.x = x;
+				Current_Pose_2D->R_Wrist.y = y;
 				cout << "Right Wrist Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 12: 
 			{
-				Current_Pose->L_Knee.x = x;
-				Current_Pose->L_Knee.y = y;
+				Current_Pose_2D->L_Knee.x = x;
+				Current_Pose_2D->L_Knee.y = y;
 				cout << "Left Knee Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 13: 
 			{
-				Current_Pose->L_Ankle.x = x;
-				Current_Pose->L_Ankle.y = y;
+				Current_Pose_2D->L_Ankle.x = x;
+				Current_Pose_2D->L_Ankle.y = y;
 				cout << "Left Ankle Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 14: 
 			{
-				Current_Pose->R_Knee.x = x;
-				Current_Pose->R_Knee.y = y;
+				Current_Pose_2D->R_Knee.x = x;
+				Current_Pose_2D->R_Knee.y = y;
 				cout << "Right Knee Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
 			case 15: 
 			{
-				Current_Pose->R_Ankle.x = x;
-				Current_Pose->R_Ankle.y = y;
+				Current_Pose_2D->R_Ankle.x = x;
+				Current_Pose_2D->R_Ankle.y = y;
 				cout << "Right Ankle Position (" << x << ", " << y << ")" << endl;
 				break;
 			}
@@ -163,9 +163,9 @@ void MouseCallBackFunc(int event, int x, int y, int flags, void* Current_Pose_Pt
 				break;
 			}
 		}
-		if(Current_Pose->Initialized_Positions < 16)
+		if(Current_Pose_2D->Initialized_Positions < 16)
 		{
-			Current_Pose->Initialized_Positions += 1;
+			Current_Pose_2D->Initialized_Positions += 1;
 		}
 		else
 		{
@@ -176,44 +176,44 @@ void MouseCallBackFunc(int event, int x, int y, int flags, void* Current_Pose_Pt
 
 
 
-void Draw_Pose(Mat Frame, Pose Frame_Pose)
+void Draw_Pose_2D(Mat Frame, Pose_2D Frame_Pose_2D)
 {
 
-	line(Frame, Frame_Pose.Head_Top, Frame_Pose.Head_Bot, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.Head_Bot, Frame_Pose.C_Chest, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.C_Chest, Frame_Pose.L_Chest, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.C_Chest, Frame_Pose.R_Chest, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.C_Chest, Frame_Pose.C_Hip, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.C_Hip, Frame_Pose.L_Hip, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.C_Hip, Frame_Pose.R_Hip, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.L_Chest, Frame_Pose.L_Elbow, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.L_Elbow, Frame_Pose.L_Wrist, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.R_Chest, Frame_Pose.R_Elbow, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.R_Elbow, Frame_Pose.R_Wrist, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.L_Hip, Frame_Pose.L_Knee, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.L_Knee, Frame_Pose.L_Ankle, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.R_Hip, Frame_Pose.R_Knee, Scalar(255,0,0), 2);
-	line(Frame, Frame_Pose.R_Knee, Frame_Pose.R_Ankle, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.Head_Top, Frame_Pose_2D.Head_Bot, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.Head_Bot, Frame_Pose_2D.C_Chest, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.C_Chest, Frame_Pose_2D.L_Chest, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.C_Chest, Frame_Pose_2D.R_Chest, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.C_Chest, Frame_Pose_2D.C_Hip, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.C_Hip, Frame_Pose_2D.L_Hip, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.C_Hip, Frame_Pose_2D.R_Hip, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.L_Chest, Frame_Pose_2D.L_Elbow, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.L_Elbow, Frame_Pose_2D.L_Wrist, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.R_Chest, Frame_Pose_2D.R_Elbow, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.R_Elbow, Frame_Pose_2D.R_Wrist, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.L_Hip, Frame_Pose_2D.L_Knee, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.L_Knee, Frame_Pose_2D.L_Ankle, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.R_Hip, Frame_Pose_2D.R_Knee, Scalar(255,0,0), 2);
+	line(Frame, Frame_Pose_2D.R_Knee, Frame_Pose_2D.R_Ankle, Scalar(255,0,0), 2);
 
 
-	circle(Frame, Frame_Pose.Head_Top, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.Head_Bot, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.C_Chest, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.L_Chest, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.R_Chest, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.C_Hip, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.L_Hip, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.R_Hip, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.L_Elbow, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.L_Wrist, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.R_Elbow, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.R_Wrist, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.L_Elbow, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.L_Wrist, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.R_Knee, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.R_Ankle, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.L_Knee, 3, Scalar(0,0,255), -1);
-	circle(Frame, Frame_Pose.L_Ankle, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.Head_Top, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.Head_Bot, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.C_Chest, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.L_Chest, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.R_Chest, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.C_Hip, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.L_Hip, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.R_Hip, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.L_Elbow, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.L_Wrist, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.R_Elbow, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.R_Wrist, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.L_Elbow, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.L_Wrist, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.R_Knee, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.R_Ankle, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.L_Knee, 3, Scalar(0,0,255), -1);
+	circle(Frame, Frame_Pose_2D.L_Ankle, 3, Scalar(0,0,255), -1);
 }
 
 
@@ -300,11 +300,11 @@ int main(int argc, char* argv[])
 	cout << "Original Frame size : " << dWidth << " x " << dHeight << endl;
 	
 	
-	Pose Current_Pose;
-	Current_Pose.Initialized_Positions = 0;
+	Pose_2D Current_Pose_2D;
+	Current_Pose_2D.Initialized_Positions = 0;
 	
-	namedWindow("Detected 2D Pose",CV_WINDOW_AUTOSIZE); //create a window 
-	setMouseCallback("Detected 2D Pose", MouseCallBackFunc, &Current_Pose);
+	namedWindow("Detected 2D Pose_2D",CV_WINDOW_AUTOSIZE); //create a window 
+	setMouseCallback("Detected 2D Pose_2D", MouseCallBackFunc, &Current_Pose_2D);
 	
 	
 	Mat First_Frame;
@@ -320,23 +320,23 @@ int main(int argc, char* argv[])
 	First_Frame.convertTo(First_Frame, CV_8U);
 	resize(First_Frame, First_Frame, Size(256,256), 0, 0, INTER_LINEAR);
 	
-	imshow("Detected 2D Pose", First_Frame); //show the frame
+	imshow("Detected 2D Pose_2D", First_Frame); //show the frame
 	
 	// Wait until user press some key after all joints have been clicked
 	cout << "Please click on the following locations in the listed order." << endl;
 	cout << "\nTop of Head\nBottom of Head\nCenter of Chest\nLeft Shoulder\nRight Shoulder\nCenter of Hips\nLeft Side of Hip\nRight Side of Hip\nLeft Elbow\nLeft Wrist\nRight Elbow\nRight Wrist\nLeft Knee\nLeft Ankle\nRight Knee\nRight Ankle\n"<< endl;
 	
-	while(Current_Pose.Initialized_Positions < 16)
+	while(Current_Pose_2D.Initialized_Positions < 16)
 	{
 		waitKey(0);
-		if(Current_Pose.Initialized_Positions < 16)
+		if(Current_Pose_2D.Initialized_Positions < 16)
 		{
-			cout << "Please select remaining " << 16 - Current_Pose.Initialized_Positions << " body part locations." << endl;
+			cout << "Please select remaining " << 16 - Current_Pose_2D.Initialized_Positions << " body part locations." << endl;
 		}
 	}
 
-	Draw_Pose(First_Frame, Current_Pose);
-	imshow("Detected 2D Pose", First_Frame); //show the frame
+	Draw_Pose_2D(First_Frame, Current_Pose_2D);
+	imshow("Detected 2D Pose_2D", First_Frame); //show the frame
 
 	cout << "\nInitial pose shown in initial frame.  Press any key to begin tracking through remainder of video.\n" << endl;
 	
@@ -414,7 +414,7 @@ int main(int argc, char* argv[])
 	size_t Largest_Contour_Size = 0;
 	int Largest_Contour_Index = 0;
 	
-	Mat Pose_Mask(Size(256,256), CV_8UC1);
+	Mat Pose_2D_Mask(Size(256,256), CV_8UC1);
 	
 	
 	
@@ -632,8 +632,8 @@ int main(int argc, char* argv[])
 		found_filtered.clear();
 		
 		//draw the currently found 2D pose on the current frame
-		Draw_Pose(Output_Image, Current_Pose);
-		imshow("Detected 2D Pose", Output_Image); //show the frame
+		Draw_Pose_2D(Output_Image, Current_Pose_2D);
+		imshow("Detected 2D Pose_2D", Output_Image); //show the frame
 		
 		//Write frame to output file
 		Output_Video.write(Output_Image);

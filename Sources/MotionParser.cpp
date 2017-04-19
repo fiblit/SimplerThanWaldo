@@ -39,6 +39,21 @@ Pose MotionParser::getNextPose() {
         throw overflow_error("EOF");
 }
 
+void MotionParser::updatePoseDB(PoseDB * db) {
+    string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
+
+    for (size_t afterLastSplit = 0, nextSplitEnd = 0;
+        (nextSplitEnd = file.find('\n', afterLastSplit)) != string::npos
+        && nextSplitEnd != afterLastSplit;
+        afterLastSplit = nextSplitEnd + 1) {
+
+        string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
+        vector<Vec3d> vjp = this->getJointPositions(line);
+        Pose p = Pose(this->currentJointNames, vjp);
+        db->poses.push_back(p);
+    }
+}
+
 void MotionParser::updateMotionDB(MotionDB * db) {
     string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
 

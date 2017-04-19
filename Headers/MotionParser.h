@@ -17,8 +17,15 @@
 
 struct MotionDB {
     std::vector<cv::Mat> descs; //todo vector -> kd-tree
+    //descs are 30x1 row vectors
     std::vector<double> avgBoneLength;
 };
+
+struct PoseDB {
+    std::vector<Pose> poses;
+    std::vector<double> avgBoneLength;
+};
+
 
 class MotionParser {
 public:
@@ -32,6 +39,9 @@ public:
     std::vector<cv::Mat> getAllPoseDescriptors();
 
     void MotionParser::updateMotionDB(MotionDB * db);
+    void MotionParser::updatePoseDB(PoseDB * db);
+
+    //deprecated
     MotionDB getMiniMotionDB();
     void mergeMotionDB(MotionDB * db1, MotionDB db2);
 private:

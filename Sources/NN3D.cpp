@@ -10,9 +10,6 @@ using namespace std::experimental::filesystem;
 typedef std::chrono::high_resolution_clock Clock;
 
 static pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_joints(Pose_2D p) {
-    vector<jointnames::jointnames> labels;
-    vector<Point2d> joints;
-
     namespace j = jointnames;
     vector<j::jointnames> labels = {
         j::HIP, j::CLAVICLE, j::HEAD_END, //spine, there is also a HEAD joint, that I may switch HEAD_END to
@@ -22,7 +19,7 @@ static pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_
         j::RFEMUR, j::RTIBIA, j::RFOOT //r leg
     };
 
-    vector<Point2d> points = {
+    vector<Point2d> joints = {
         Point2d(p.C_Hip), Point2d(p.C_Chest), Point2d(p.Head_Top),//spine
         Point2d(p.L_Chest), Point2d(p.L_Elbow), Point2d(p.L_Wrist),//l arm
         Point2d(p.L_Hip), Point2d(p.L_Knee), Point2d(p.L_Ankle),//l leg
@@ -36,6 +33,30 @@ static pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_
 Pose extract3D_from_Pose_2D(Pose_2D pose, std::string databasepath) {
     pair<vector<jointnames::jointnames>, vector<Point2d>> result = Pose_2D_to_labeled_joints(pose);
     return extract3D(result.first, result.second, databasepath);
+}
+
+PoseDB create_proj_DB(string path) {
+    PoseDB db;
+    db.poses = vector<Pose>();
+    db.avgBoneLength = vector<double>();
+
+    //while there are motion files
+    cout << "i/o v2 start" << endl;
+    auto t1 = Clock::now();
+    for (auto &p : recursive_directory_iterator(path)) {
+        MotionParser mp;
+        //load file into MotionParser
+        if (!is_directory(p.path())) {
+            mp.open(p.path().string());
+            mp.updatePoseDB(&db);
+        }
+    }
+    auto t2 = Clock::now();
+    cout << "i/o in "
+        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
+        << endl;
+
+    return db;
 }
 
 //TODO: also return meta information(like avg bone lengths)/an actual class/struct for the DB
@@ -113,7 +134,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
 
     //release mode breakpoint; because debug is 10x slower
 
-    MotionDB db = createDB(dbpath);
+    PoseDB db = create_proj_DB(dbpath);
     auto t_ = Clock::now();
     cout << "after db in " 
         << chrono::duration_cast<chrono::nanoseconds>(t_ - t0).count() / 1000000000.
@@ -138,40 +159,6 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     cout << "after get bones & joints in " 
         << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
         << endl;
-    double s = 1;
-    for (int k = 0; k < bonenames::NUMBONES; k++) {
-        Vec3d start = joints2D[bones2D[k].start];
-        Vec3d end = joints2D[bones2D[k].end];
-        double dx = end[0] - start[0];
-        double dy = end[1] - start[1];
-        //I don't know what jiang was doing, but I'm 95% sure this is wrong.
-        //Shouldn't it by dx^2 PLUS dy^2 ? There's no way minus makes sense...
-        s = max(s, sqrt(dx*dx + dy*dy) / bonelength[k]);
-    }
-
-    auto t3 = Clock::now();
-    cout << "scale : " << s << endl;
-    cout << "after get scale in "
-        << chrono::duration_cast<chrono::nanoseconds>(t3 - t2).count() / 1000000000.
-        << endl;
-
-    //calculate projected depth difference (dZ) of each endpoint
-    //these aren't bones
-    vector<double> depthDiff = vector<double>(bonenames::NUMBONES);
-    for (int k = 0; k < bonenames::NUMBONES; k++) {
-        double scaledLen = s*bonelength[k];
-        Vec3d start = joints2D[bones2D[k].start];
-        Vec3d end = joints2D[bones2D[k].end];
-        double dx = end[0] - start[0];
-        double dy = end[1] - start[1];
-        depthDiff[k] = sqrt(scaledLen*scaledLen - dx*dx - dy*dy);
-        cout << Pose::bonetoStr((bonenames::bonenames)k) << " " << depthDiff[k] << endl;
-    }
-   
-    auto t4 = Clock::now();
-    cout << "after orthographic depth diff in " 
-        << chrono::duration_cast<chrono::nanoseconds>(t4 - t3).count() / 1000000000.
-        << endl;
 
     //kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
     //cout << "max_depth: " << kd_tree::max_depth << endl;
@@ -179,6 +166,59 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //cout << "after kd tree construction in "
     //    << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
     //    << endl;
+
+    //finalPose = search_possible_3D(joints2D, bones2D, depthDiff, db);//motionDB/kd
+    auto t4 = Clock::now();
+    Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
+
+    auto f = Clock::now();
+    cout << "after ANN search over all possible depth placements in " 
+        << chrono::duration_cast<chrono::nanoseconds>(f - t4).count() / 1000000000.
+        << endl;
+
+    cout << "------------------------" << endl;
+    finalPose.print();
+
+    return finalPose;
+}
+
+Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D, PoseDB db) {
+
+}
+
+double get_scale_3D_construct(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D, std::vector<double> avgBoneLength) {
+    double s = 1;
+    for (int k = 0; k < bonenames::NUMBONES; k++) {
+        Vec3d start = joints2D[bones2D[k].start];
+        Vec3d end = joints2D[bones2D[k].end];
+        double dx = end[0] - start[0];
+        double dy = end[1] - start[1];
+        s = max(s, sqrt(dx*dx + dy*dy) / avgBoneLength[k]);
+    }
+    return s;
+}
+
+std::vector<double> get_depthdiff_3D_construct(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D, double scale, std::vector<double> avgBoneLength) {
+    //calculate projected depth difference (dZ) of each endpoint
+    //these aren't bones
+    vector<double> depthDiff = vector<double>(bonenames::NUMBONES);
+    cout << "depth diffs" << endl;
+    for (int k = 0; k < bonenames::NUMBONES; k++) {
+        double scaledLen = scale*avgBoneLength[k];
+        Vec3d start = joints2D[bones2D[k].start];
+        Vec3d end = joints2D[bones2D[k].end];
+        double dx = end[0] - start[0];
+        double dy = end[1] - start[1];
+        depthDiff[k] = sqrt(scaledLen*scaledLen - dx*dx - dy*dy);
+       cout << Pose::bonetoStr((bonenames::bonenames)k) << " " << depthDiff[k] << endl;
+    }
+    return depthDiff;
+}
+
+//this is based on jiang's algorithm
+Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB db) {
+    double scale = get_scale_3D_construct(joints2D, bones2D, db.avgBoneLength);
+    vector<double> depthDiff = get_depthdiff_3D_construct(joints2D, bones2D, scale, db.avgBoneLength);
 
     Pose finalPose;
     double closest = numeric_limits<double>::infinity();
@@ -221,14 +261,6 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
             << chrono::duration_cast<chrono::nanoseconds>(ann4 - ann3).count() / 1000000000.
             << endl;
     }
-
-    auto f = Clock::now();
-    cout << "after ANN search over all possible depth placements in " 
-        << chrono::duration_cast<chrono::nanoseconds>(f - t4).count() / 1000000000.
-        << endl;
-
-    cout << "------------------------" << endl;
-    finalPose.print();
 
     return finalPose;
 }
@@ -312,4 +344,3 @@ double findANN_old(Pose guess, MotionDB db) {
     }
     return closest;
 }
-

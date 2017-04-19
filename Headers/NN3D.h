@@ -6,6 +6,7 @@
 #include "MotionParser.h"
 #include "Pose.h"
 #include "kd_tree.h"
+#include "Pose_2D.h"
 
 /*
 Perform ANN on the pose database using MotionParser to read in motionfiles/searchposes and Pose to represent poses.
@@ -27,6 +28,11 @@ double pose_similar(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
 double pose_distant(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
 double findANN(Pose p, kd_tree * db);
 double findANN_old(Pose p, MotionDB db);
+std::pair<Pose, double> find_proj_ANN(Pose P, PoseDB * db);
 
+double get_scale_3D_construct(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D);
+std::vector<double> get_depthdiff_3D_construct(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D);
+Pose search_possible_3D(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D, MotionDB db);
+Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D, PoseDB db);
 
 #endif//NN3D_H

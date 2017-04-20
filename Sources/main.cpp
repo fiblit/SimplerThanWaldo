@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
         Point2d(-1*s, -1*s), Point2d(-1*s, -3*s), Point2d(-1*s, -5*s)//r leg
     };
 
-    string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose";
+    string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose_mini";
     cout << "initialization complete" << endl;
 
     timer::start(0, "solution found");

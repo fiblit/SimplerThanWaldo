@@ -1,13 +1,12 @@
 #include "NN3D.h"
+#include "timer.h"
+
 #include <experimental\filesystem>
 #include <bitset>
 
 using namespace std;
 using namespace cv;
 using namespace std::experimental::filesystem;
-
-#include <chrono>
-typedef std::chrono::high_resolution_clock Clock;
 
 static pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_joints(Pose_2D p) {
     namespace j = jointnames;
@@ -41,8 +40,7 @@ PoseDB create_proj_DB(string path) {
     db.avgBoneLength = vector<double>();
 
     //while there are motion files
-    cout << "i/o v2 start" << endl;
-    auto t1 = Clock::now();
+    timer::start(2, "i/o v2");
     for (auto &p : recursive_directory_iterator(path)) {
         MotionParser mp;
         //load file into MotionParser
@@ -51,10 +49,7 @@ PoseDB create_proj_DB(string path) {
             mp.updatePoseDB(&db);
         }
     }
-    auto t2 = Clock::now();
-    cout << "i/o in "
-        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
-        << endl;
+    timer::stop(2);
 
     return db;
 }
@@ -66,8 +61,7 @@ MotionDB createDB(string path) {
     db.avgBoneLength = vector<double>(bonenames::NUMBONES, 0.0);
 
     //while there are motion files
-    cout << "i/o start" << endl;
-    auto t1 = Clock::now();
+    timer::start(2, "i/o v1");
     for (auto &p : recursive_directory_iterator(path)) {
         MotionParser mp;
         //load file into MotionParser
@@ -76,47 +70,15 @@ MotionDB createDB(string path) {
             mp.updateMotionDB(&db);
         }
     }
-    auto t2 = Clock::now();
-    cout << "i/o in "
-        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
-        << endl;
+    timer::stop(2);
 
     return db;
 }
 
-//I'm pretty sure they all have the same length... but I might as well take the average.
-//also this should only ever need to be done once.
-/*
-vector<double> getAvgBoneLength(MotionDB db) {
-    vector<double> runningAvg = vector<double>(bonenames::NUMBONES);
-    int poseCount = 0;
-    for (int i = 0; i < bonenames::NUMBONES; i++)
-        runningAvg[i] = 0;
-
-    //while there are poses
-    for (Pose p : db) {
-        vector<Bone> bones = p.getBones();
-        vector<Vec3d> joints = p.getJoints();
-        for (int i = 0; i < bonenames::NUMBONES; i++) {
-            Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
-            double len = sqrt(diff.dot(diff));
-            runningAvg[i] = (len + poseCount * runningAvg[i]) / (poseCount + 1);
-        }
-        poseCount++;
-    }
-
-    return runningAvg;
-}
-*/
-
-#include <chrono>
-typedef std::chrono::high_resolution_clock Clock;
-
 //based on jiang
 //labels.size() MUST equal points.size()
 Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, string dbpath) {
-    auto t_start = Clock::now();
-
+    timer::start(1, "create ortho projection of 2D pose");
     //create 2D Pose
     vector<Vec3d> points3D = vector<Vec3d>(points.size());
     for (int i = 0; i < points.size(); i++)
@@ -125,65 +87,122 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
 
     Pose estimate2D(labels, points3D);
     //estimate2D.print();
+    timer::stop(1);
 
-    //calculate bone lengths
-    auto t0 = Clock::now();
-    cout << "after create 2d skele in 3d in"
-        << chrono::duration_cast<chrono::nanoseconds>(t0 - t_start).count() / 1000000000.
-        << endl;
-
-    //release mode breakpoint; because debug is 10x slower
-
+    timer::start(1, "create projected db");
     PoseDB db = create_proj_DB(dbpath);
-    auto t_ = Clock::now();
-    cout << "after db in " 
-        << chrono::duration_cast<chrono::nanoseconds>(t_ - t0).count() / 1000000000.
-        << endl;
+    timer::stop(1);
 
     vector<double> bonelength = db.avgBoneLength;
-    //calculate orthographic scale, s
-    auto t1 = Clock::now();
-    cout << "avg bone lengths : ";
+    cout << "avg bone lengths:\n";
     for (int i = 0; i < bonelength.size(); i++)
-        cout << "bone " << Pose::bonetoStr((bonenames::bonenames)i) << ": " << bonelength[i] << endl;
+        cout << Pose::bonetoStr((bonenames::bonenames)i) << ": " << bonelength[i] << "\n";
 
-    cout << "after get avg bone length in " 
-        << chrono::duration_cast<chrono::nanoseconds>(t1 - t_).count() / 1000000000.
-        << endl;
+    timer::start(1, "get 2D bones & joints");
     vector<Bone> bones2D = estimate2D.getBones();
     vector<Vec3d> joints2D = estimate2D.getJoints();//different order than points3D
-    auto t2 = Clock::now();
-    cout << "bones & joints: ";
     estimate2D.print();
-    cout << endl;
-    cout << "after get bones & joints in " 
-        << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / 1000000000.
-        << endl;
+    timer::stop(1);
 
+    //timer::start(1, "create kd tree of db");
     //kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
     //cout << "max_depth: " << kd_tree::max_depth << endl;
-    //auto t4_1 = Clock::now();
-    //cout << "after kd tree construction in "
-    //    << chrono::duration_cast<chrono::nanoseconds>(t4_1 - t4).count() / 1000000000.
-    //    << endl;
+    //timer::stop(1);
 
+    //timer::start(1, "search db (by guessing 3D)");
     //finalPose = search_possible_3D(joints2D, bones2D, depthDiff, db);//motionDB/kd
-    auto t4 = Clock::now();
+    timer::start(1, "search db (by reprojections)");
     Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
-
-    auto f = Clock::now();
-    cout << "after ANN search over all possible depth placements in " 
-        << chrono::duration_cast<chrono::nanoseconds>(f - t4).count() / 1000000000.
-        << endl;
-
-    cout << "------------------------" << endl;
-    finalPose.print();
+    timer::stop(1);
 
     return finalPose;
 }
 
 Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D, PoseDB db) {
+    //find the bone whose axis is most near-parallel to the image plane
+    //Vec3d parallel_dir_front(0, 0, 0);
+    //Vec3d parallel_dir_back(0, 0, 0);
+    timer::start(2, "find parallel bone");
+    bonenames::bonenames b = bonenames::NIL;
+    Vec3d dir_2d(0, 0, 0);//pretend it's in 2d
+    double best_parallel = -numeric_limits<double>::infinity();
+    for (int k = 0; k < bones2D.size(); k++) {
+        Vec3d dir_k = joints2D[bones2D[b].end] - joints2D[bones2D[b].start];
+        double l = db.avgBoneLength[k];
+           
+        double parallel_val = (dir_k[0]*dir_k[0] + dir_k[1]*dir_k[1]) / (l*l);
+        if (parallel_val > best_parallel) {
+            best_parallel = parallel_val;
+            b = (bonenames::bonenames)k;
+            dir_2d = dir_k;
+            //double depth_diff;
+            //parallel_dir_front = ;
+            //parallel_dir_back = ;
+        }
+    }
+    timer::stop(2);
 
+    //generate cameras circling around the bone's axis most near-parallel to the image plane
+    timer::start(2, "generate cameras");
+    double dir_len = norm(dir_2d);
+    double s = dir_len / db.avgBoneLength[b];
+    Mat scale = (Mat_<double>(3, 3) <<
+        s, 0, 0,
+        0, s, 0,
+        0, 0, s);
+    dir_2d /= dir_len;
+    Vec3d x_new = dir_2d.cross(Vec3d(0,0,1));//right = up x back
+    Mat roll_to_dir = (Mat_<double>(3, 3) <<
+        x_new[0], dir_2d[0], 0,
+        x_new[1], dir_2d[1], 0,
+        x_new[2], dir_2d[2], 1);
+    const int num_cameras = 60;
+    vector<Mat> cameras = vector<Mat>(num_cameras);//orthographic
+    for (int i = 0; i < num_cameras; i++) {
+        double yaw = (360. / static_cast<double>(num_cameras)) * static_cast<double>(i);
+        double syaw = sin(yaw);
+        double cyaw = cos(yaw);
+        Mat r_yaw = (Mat_<double>(3, 3) <<
+             cyaw,  0,  syaw,
+             0,     1,  0,
+            -syaw,  0,  cyaw);
+        cameras[i] = r_yaw * roll_to_dir * scale;
+    }
+    timer::stop(2);
+
+    timer::start(2, "reprojection of db");
+    double least_squares = numeric_limits<double>::infinity();
+    Pose bestPose;
+    for (Pose pose : db.poses) {
+        timer::start(3, "reprojecting a db pose");
+        for (Mat cam : cameras) {
+            //reproject pose into 2D
+            vector<Vec3d> joints = pose.getJoints();//TODO: there are more joints here than I actually need I think...
+            for (int i = 0; i < joints.size(); i++) {
+                Mat j_new = cam * Mat(joints[i]);
+                joints[i] = Vec3d(j_new.at<double>(0, 0), j_new.at<double>(1, 0), j_new.at<double>(2, 0));
+            }
+
+            //get reprojection error
+            vector<Bone> bones = pose.getBones();
+            //ehn, screw it, overlapping endpoints will get double weighted :p
+            double reproj_err = 0;
+            for (int k = 0; k < bones.size(); k++) {
+                Vec3d diffe = (joints2D[bones[k].end] - joints[bones[k].end]);
+                Vec3d diffs = (joints2D[bones[k].start] - joints[bones[k].start]);
+                reproj_err += diffe.dot(diffe) + diffs.dot(diffs);//||d_end||^2 + ||d_start||^2
+            }
+                 
+            //compare reprojection to Pose_2D(via LS)
+            if (least_squares > reproj_err) {
+                least_squares = reproj_err;
+                bestPose = pose;
+            }
+        }
+        timer::stop(3);
+    }
+    timer::stop(2);
+    return bestPose;
 }
 
 double get_scale_3D_construct(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D, std::vector<double> avgBoneLength) {
@@ -230,8 +249,7 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
         vector<Vec3d> guessPositions = joints2D;
         vector<Bone> guessBones = bones2D;
 
-        auto ann1 = Clock::now();
-        cout << "\tguess generation" << endl;
+        timer::start(2, "generate a guess");
         for (int k = 0; k < bonenames::NUMBONES; k++) {
             bool sign = bitset<bonenames::NUMBONES>(boneDepthSign)[k];
             //the bonenames are ordered in such a way that this will work fine
@@ -244,29 +262,21 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
         }
 
         Pose guess(guessPositions);
-        auto ann2 = Clock::now();
-        cout << "\t in "
-            << chrono::duration_cast<chrono::nanoseconds>(ann2 - ann1).count() / 1000000000.
-            << endl;
+        timer::stop(2);
 
-        auto ann3 = Clock::now();
-        cout << "\tfind ann" << endl;
+        timer::start(2, "find ANN");
         double distance = findANN_old(guess, db);//kd_tree_of_db);
         if (distance < closest) {
             finalPose = guess;//should this maybe instead be the pose found in the ANN?
             closest = distance;
         }
-        auto ann4 = Clock::now();
-        cout << "\t in "
-            << chrono::duration_cast<chrono::nanoseconds>(ann4 - ann3).count() / 1000000000.
-            << endl;
+        timer::stop(2);
     }
 
     return finalPose;
 }
 
 static cv::Scalar boneToColor(bonenames::bonenames bone) {
-
     if (bone == bonenames::HEAD)    return Scalar(.95,.5,.5);
     else if (bone == bonenames::TORSO)   return Scalar(.45,.5,.5);
     else if (bone == bonenames::LUPARM)  return Scalar(.85,.5,.5);

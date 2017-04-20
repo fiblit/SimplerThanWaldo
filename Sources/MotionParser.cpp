@@ -2,9 +2,6 @@
 #include <sstream>
 #include <iostream>
 
-#include <chrono>
-typedef std::chrono::high_resolution_clock Clock;
-
 // TODO: comments/documentation
 
 // do not use outside of a .cpp or function

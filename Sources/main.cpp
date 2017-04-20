@@ -1,18 +1,13 @@
-/**
-TODO replace all code with the actual main. ATM this is just a junk file.
-**/
+#include "timer.h"
 
 #include <opencv2/opencv.hpp>
 
 #include <iostream>
 #include <string>
-#include <chrono>
 
 //only use this in .cpp or functions
 using namespace cv;
 using namespace std;
-
-typedef std::chrono::high_resolution_clock Clock;
 
 #include "NN3D.h"
 
@@ -85,6 +80,7 @@ void mouse_callback(int event, int x, int y, int flags, void * userdata) {
 }
 
 int main(int argc, char** argv) {
+    timer::init_layers(10);//layers 0 through 9 allowed
 
     //init extract3D
     namespace j = jointnames;
@@ -106,17 +102,16 @@ int main(int argc, char** argv) {
     };
 
     string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose_mini";
-
     cout << "initialization complete" << endl;
 
-    auto t1 = Clock::now();
+    timer::start(0, "solution found");
     //obtain Pose
     Pose solution = extract3D(labels, points, databasepath);
-    auto t2 = Clock::now();
+    timer::stop(0);
 
-    cout << "solution found in " 
-         << chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count()/1000000000.
-         << "s" << endl;
+    cout << "----------------\n";
+    cout << "solution:\n";
+    solution.print();
 
     //temporary debug output
     vector<Vec3d> outJoints = solution.getJoints();
@@ -145,6 +140,7 @@ int main(int argc, char** argv) {
     cout << "\n DONE \n" << flush;
     imshow("3D Pose", out);
 
+    //no accidental quitting allowed
     for (;;)
         waitKey(0);
 }

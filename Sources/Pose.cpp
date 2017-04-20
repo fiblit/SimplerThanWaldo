@@ -1,10 +1,6 @@
 #include "Pose.h"
 #include <algorithm>
 
-#include <chrono>
-
-typedef std::chrono::high_resolution_clock Clock;
-
 using namespace std;
 using namespace cv;
 
@@ -15,7 +11,6 @@ Pose::Pose(vector<string> names, vector<Vec3d> positions) {
 
 Pose::Pose() {
 }
-
 
 void Pose::jointInit(vector<jointnames::jointnames> labels, vector<Vec3d> positions) {
     if (labels.size() != positions.size())
@@ -163,7 +158,6 @@ bonenames::bonenames Pose::strToBone(std::string name) {
     else                          throw domain_error("invalid bone name");
 }
 std::string Pose::bonetoStr(bonenames::bonenames bone) {
-
     if      (bone == bonenames::HEAD)    return "  head";
     else if (bone == bonenames::TORSO)   return " torso";
     else if (bone == bonenames::LUPARM)  return "luparm";
@@ -219,7 +213,6 @@ jointnames::jointnames Pose::strToJoint(std::string name) {
 }
 
 void Pose::print() {
-
     vector<Bone> bones = this->getBones();
     vector<Vec3d> joints = this->getJoints();
     for (int k = 0; k < bones.size(); k++)

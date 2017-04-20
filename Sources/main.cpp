@@ -107,6 +107,10 @@ int main(int argc, char** argv) {
     timer::start(0, "solution found");
     //obtain Pose
     Pose solution = extract3D(labels, points, databasepath);
+    vector<Vec3d> joints = solution.getJoints();
+    for (Vec3d j : joints)
+        j -= joints[jointnames::HIP];
+    solution = Pose(joints);
     timer::stop(0);
 
     cout << "----------------\n";
@@ -125,7 +129,7 @@ int main(int argc, char** argv) {
     double yaw = 0, pitch = 0;
     Vec3d up(0, 1, 0);
     Vec3d T(0, 0, 0);
-    Mat virtualCamera = ortho_cam(yaw, pitch, 1.0, T);
+    Mat virtualCamera = ortho_cam(yaw, pitch, 250.0, T);
 
     int outW = 800, outH = 600;
     // So, for this step, I'd prefer if we could make it an interactive camera

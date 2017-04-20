@@ -89,10 +89,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //estimate2D.print();
     timer::stop(1);
 
-    timer::start(1, "create DB");
-    MotionDB db = createDB(dbpath);
-    //timer::start(1, "create projected db");
-    //PoseDB db = create_proj_DB(dbpath);
+    //timer::start(1, "create DB");
+    //MotionDB db = createDB(dbpath);
+    timer::start(1, "create projected db");
+    PoseDB db = create_proj_DB(dbpath);
     timer::stop(1);
 
     vector<double> bonelength = db.avgBoneLength;
@@ -111,10 +111,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //cout << "max_depth: " << kd_tree::max_depth << endl;
     //timer::stop(1);
 
-    timer::start(1, "search db (by guessing 3D)");
-    Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
-    //timer::start(1, "search db (by reprojections)");
-    //Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
+    //timer::start(1, "search db (by guessing 3D)");
+    //Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
+    timer::start(1, "search db (by reprojections)");
+    Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
     timer::stop(1);
 
     return finalPose;
@@ -158,7 +158,7 @@ Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D
         x_new[0], dir_2d[0], 0,
         x_new[1], dir_2d[1], 0,
         x_new[2], dir_2d[2], 1);
-    const int num_cameras = 60;
+    const int num_cameras = 10;
     vector<Mat> cameras = vector<Mat>(num_cameras);//orthographic
     for (int i = 0; i < num_cameras; i++) {
         double yaw = (360. / static_cast<double>(num_cameras)) * static_cast<double>(i);

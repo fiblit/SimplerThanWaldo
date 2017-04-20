@@ -37,7 +37,7 @@ Pose extract3D_from_Pose_2D(Pose_2D pose, std::string databasepath) {
 PoseDB create_proj_DB(string path) {
     PoseDB db;
     db.poses = vector<Pose>();
-    db.avgBoneLength = vector<double>();
+    db.avgBoneLength = vector<double>(bonenames::NUMBONES, 0.0);
 
     //while there are motion files
     timer::start(2, "i/o v2");
@@ -89,8 +89,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //estimate2D.print();
     timer::stop(1);
 
-    timer::start(1, "create projected db");
-    PoseDB db = create_proj_DB(dbpath);
+    timer::start(1, "create DB");
+    MotionDB db = createDB(dbpath);
+    //timer::start(1, "create projected db");
+    //PoseDB db = create_proj_DB(dbpath);
     timer::stop(1);
 
     vector<double> bonelength = db.avgBoneLength;
@@ -109,10 +111,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //cout << "max_depth: " << kd_tree::max_depth << endl;
     //timer::stop(1);
 
-    //timer::start(1, "search db (by guessing 3D)");
-    //finalPose = search_possible_3D(joints2D, bones2D, depthDiff, db);//motionDB/kd
-    timer::start(1, "search db (by reprojections)");
-    Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
+    timer::start(1, "search db (by guessing 3D)");
+    Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
+    //timer::start(1, "search db (by reprojections)");
+    //Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
     timer::stop(1);
 
     return finalPose;
@@ -127,7 +129,7 @@ Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D
     Vec3d dir_2d(0, 0, 0);//pretend it's in 2d
     double best_parallel = -numeric_limits<double>::infinity();
     for (int k = 0; k < bones2D.size(); k++) {
-        Vec3d dir_k = joints2D[bones2D[b].end] - joints2D[bones2D[b].start];
+        Vec3d dir_k = joints2D[bones2D[k].end] - joints2D[bones2D[k].start];
         double l = db.avgBoneLength[k];
            
         double parallel_val = (dir_k[0]*dir_k[0] + dir_k[1]*dir_k[1]) / (l*l);
@@ -173,24 +175,34 @@ Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D
     timer::start(2, "reprojection of db");
     double least_squares = numeric_limits<double>::infinity();
     Pose bestPose;
-    for (Pose pose : db.poses) {
-        timer::start(3, "reprojecting a db pose");
-        for (Mat cam : cameras) {
-            //reproject pose into 2D
+    //for (Pose pose : db.poses) {
+    for (Mat cam : cameras) {
+        timer::start(3, "reprojecting db poses");
+        //for (Mat cam : cameras) {
+        for (Pose pose : db.poses) {
             vector<Vec3d> joints = pose.getJoints();//TODO: there are more joints here than I actually need I think...
-            for (int i = 0; i < joints.size(); i++) {
-                Mat j_new = cam * Mat(joints[i]);
-                joints[i] = Vec3d(j_new.at<double>(0, 0), j_new.at<double>(1, 0), j_new.at<double>(2, 0));
-            }
+            vector<Bone> bones = pose.getBones();
+            vector<bool> projected(joints.size(), false);
 
             //get reprojection error
-            vector<Bone> bones = pose.getBones();
-            //ehn, screw it, overlapping endpoints will get double weighted :p
             double reproj_err = 0;
             for (int k = 0; k < bones.size(); k++) {
-                Vec3d diffe = (joints2D[bones[k].end] - joints[bones[k].end]);
-                Vec3d diffs = (joints2D[bones[k].start] - joints[bones[k].start]);
-                reproj_err += diffe.dot(diffe) + diffs.dot(diffs);//||d_end||^2 + ||d_start||^2
+                Vec3d diffe(0,0,0), diffs(0,0,0);
+                if (!projected[bones[k].end]) {
+                    //reproject joint
+                    projected[bones[k].end] = true;
+                    Mat j_new = cam * Mat(joints[bones[k].end] - joints[jointnames::HIP]);
+                    joints[bones[k].end] = Vec3d(j_new.at<double>(0, 0), j_new.at<double>(1, 0), j_new.at<double>(2, 0));
+                    diffe = Vec3d(joints2D[bones[k].end] - joints[bones[k].end]);
+                }
+                if (!projected[bones[k].start]) {
+                    //reproject joint
+                    projected[bones[k].start] = true;
+                    Mat j_new = cam * Mat(joints[bones[k].start] - joints[jointnames::HIP]);
+                    joints[bones[k].start] = Vec3d(j_new.at<double>(0, 0), j_new.at<double>(1, 0), j_new.at<double>(2, 0));
+                    diffs = (joints2D[bones[k].start] - joints[bones[k].start]);
+                }
+                reproj_err += diffe.dot(diffe) + diffs.dot(diffs);//||diff end||^2 + ||diff start||^2
             }
                  
             //compare reprojection to Pose_2D(via LS)

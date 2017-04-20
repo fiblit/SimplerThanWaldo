@@ -47,6 +47,15 @@ void MotionParser::updatePoseDB(PoseDB * db) {
         string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
         vector<Vec3d> vjp = this->getJointPositions(line);
         Pose p = Pose(this->currentJointNames, vjp);
+
+        vector<Bone> bones = p.getBones();
+        vector<Vec3d> joints = p.getJoints();
+        for (int i = 0; i < bonenames::NUMBONES; i++) {
+            Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
+            double len = sqrt(diff.dot(diff));
+            db->avgBoneLength[i] = (len + db->poses.size() * db->avgBoneLength[i]) / (db->poses.size() + 1);
+        }
+
         db->poses.push_back(p);
     }
 }

@@ -27,7 +27,7 @@ Mat ortho_cam(double yaw, double pitch, double scale, Vec3d trans) {
 
     Mat r = r_x_pitch * r_y_yaw;
 
-    return (Mat_<double>(3, 4) <<
+    return scale*(Mat_<double>(3, 4) <<
         r.at<double>(0, 0), r.at<double>(0, 1), r.at<double>(0, 2), trans[0],
         r.at<double>(1, 0), r.at<double>(1, 1), r.at<double>(1, 2), trans[1],
         r.at<double>(2, 0), r.at<double>(2, 1), r.at<double>(2, 2), trans[2]);
@@ -69,7 +69,7 @@ void mouse_callback(int event, int x, int y, int flags, void * userdata) {
             int dx = x - prev_x;
             int dy = y - prev_y;
             r->yaw += dx * 3.14159 / 180.;
-            r->pitch += dy* 3.14159 / 180.;
+            r->pitch += dy * 3.14159 / 180.;
             r->camera = ortho_cam(r->yaw, r->pitch, 1.0, Vec3d(0, 0, 0));
             r->img = reproject(r->solution, r->camera, Vec2i(800, 600));
             imshow("3D Pose", r->img);

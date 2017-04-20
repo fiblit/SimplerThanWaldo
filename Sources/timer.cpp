@@ -28,9 +28,10 @@ namespace timer {
             Time end_time = Clock::now();
             for (int i = 0; i < layer_i; i++)
                 cout << "\t";
+            long long dt = chrono::duration_cast<chrono::nanoseconds>(end_time - time_layers[layer_i].first).count();
             cout << " in "
-                << chrono::duration_cast<chrono::nanoseconds>(end_time - time_layers[layer_i].first).count()
-                << " ns [" + time_layers[layer_i].second + "]\n";
+                << dt / 1000000.
+                << " ms [" + time_layers[layer_i].second + "]\n";
             time_layers[layer_i].second = "";
         }
     }

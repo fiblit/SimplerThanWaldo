@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
         Point2d(-1*s, -1*s), Point2d(-1*s, -3*s), Point2d(-1*s, -5*s)//r leg
     };
 
-    string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose_mini";
+    string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose";
     cout << "initialization complete" << endl;
 
     timer::start(0, "solution found");
@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
     double yaw = 0, pitch = 0;
     Vec3d up(0, 1, 0);
     Vec3d T(0, 0, 0);
-    Mat virtualCamera = ortho_cam(yaw, pitch, 250.0, T);
+    Mat virtualCamera = ortho_cam(yaw, pitch, 1.0, T);
 
     int outW = 800, outH = 600;
     // So, for this step, I'd prefer if we could make it an interactive camera

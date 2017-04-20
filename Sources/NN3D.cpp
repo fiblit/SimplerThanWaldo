@@ -203,7 +203,8 @@ Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D
                     joints[bones[k].end] = Vec3d(j_new.at<double>(0, 0), j_new.at<double>(1, 0), j_new.at<double>(2, 0));
                     diffe = Vec3d(joints2D[bones[k].end] - joints[bones[k].end]);
                 }
-                reproj_err += diffe.dot(diffe) + diffs.dot(diffs);//||diff end||^2 + ||diff start||^2
+                //||diff end||^2 + ||diff start||^2
+                reproj_err += diffe.dot(diffe) + diffs.dot(diffs);
             }
                  
             //compare reprojection to Pose_2D(via LS)

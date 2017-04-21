@@ -25,6 +25,7 @@ Pose extract3D(std::vector<jointnames::jointnames> labels, std::vector<cv::Point
 double pose_similar(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
 double pose_distant(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);
 double findANN(Pose p, kd_tree * db);
+double findANN_end(Pose p, MotionDB db);
 double findANN_old(Pose p, MotionDB db);
 
 double get_scale_3D_construct(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, std::vector<double> avgBoneLength);

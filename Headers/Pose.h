@@ -52,6 +52,7 @@ public:
     cv::Mat getLocalInverse();
     std::vector<cv::Vec3d> normLocToHip();
     cv::Mat getDescriptor();
+    cv::Mat getEndpointDescriptor();
 
     //enum converters
     static bonenames::bonenames strToBone(std::string name);

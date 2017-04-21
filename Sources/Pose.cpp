@@ -121,11 +121,22 @@ Mat Pose::getDescriptor() {
     return descriptor;
 }
 
-/*
 Mat Pose::getEndpointDescriptor() {
     Mat descriptor = Mat(3 * bonenames::NUMBONES, 1, CV_64F);
+
+    Mat Ainv = this->getLocalInverse();
+
+    for (int i = 0; i < this->ordered_bones.size(); i++) {
+        Bone u = this->ordered_bones[i];
+        Vec3d uk = this->ordered_positions[u.end];
+        Mat vk = Ainv * Mat(uk);
+        for (int axis = 0; axis < 3; axis++)
+            descriptor.at<double>(3.*i + axis, 0) = vk.at<double>(static_cast<double>(axis), 0);
+    }
+
+    return descriptor;
 }
-*/
+
 
 //only for queries
 vector<Vec3d> Pose::getJoints() {

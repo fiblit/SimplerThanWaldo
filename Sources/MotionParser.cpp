@@ -96,7 +96,7 @@ void MotionParser::updateMotionDB(MotionDB * db) {
             db->avgBoneLength[i] = (len + db->descs.size() * db->avgBoneLength[i]) / (db->descs.size() + 1);
         }
 
-        Mat desc = p.getDescriptor();
+        Mat desc = p.getDescriptor();//.getEndpointDescriptor();//getDescriptor();
 
         db->descs.push_back(desc);
     }

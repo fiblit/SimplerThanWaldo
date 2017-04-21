@@ -89,10 +89,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //estimate2D.print();
     timer::stop(1);
 
-    timer::start(1, "create DB");
-    MotionDB db = createDB(dbpath);
-    //timer::start(1, "create projected db");
-    //PoseDB db = create_proj_DB(dbpath);
+    //timer::start(1, "create DB");
+    //MotionDB db = createDB(dbpath);
+    timer::start(1, "create projected db");
+    PoseDB db = create_proj_DB(dbpath);
     timer::stop(1);
 
     vector<double> bonelength = db.avgBoneLength;
@@ -111,10 +111,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //cout << "max_depth: " << kd_tree::max_depth << endl;
     //timer::stop(1);
 
-    timer::start(1, "search db (by guessing 3D)");
-    Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
-    //timer::start(1, "search db (by reprojections)");
-    //Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
+    //timer::start(1, "search db (by guessing 3D)");
+    //Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
+    timer::start(1, "search db (by reprojections)");
+    Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
     timer::stop(1);
 
     return finalPose;
@@ -265,10 +265,9 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
 
     //could be parallelised, however the biggest speed up would come from a spatial data strucutre as that's O(n) -> O(log n)
     for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << bonenames::NUMBONES); boneDepthSign++) {
+        timer::start(2, "generate a guess");
         vector<Vec3d> guessPositions = joints2D;
         vector<Bone> guessBones = bones2D;
-
-        timer::start(2, "generate a guess");
         for (int k = 0; k < bonenames::NUMBONES; k++) {
             bool sign = bitset<bonenames::NUMBONES>(boneDepthSign)[k];
             //the bonenames are ordered in such a way that this will work fine
@@ -302,8 +301,8 @@ double pose_similar(Mat poseDescriptor1, Mat poseDescriptor2) {
 
 //the closer to 0, the better.
 double pose_distant(Mat pd1, Mat pd2) {
-    Mat diff = pd1 - pd2;
-    return diff.dot(diff); //==||diff||^2
+    pd2 = pd1 - pd2;
+    return pd2.dot(pd2); //==||diff||^2
 }
 
 //not actually *approximate* yet. I was going to read some locality-sensitive hashing stuff for that.
@@ -313,6 +312,14 @@ double findANN(Pose guess, kd_tree * db) {
     return result.second;
 }
 
+double findANN_end(Pose guess, MotionDB db) {
+    double closest = numeric_limits<double>::infinity();
+    Mat guessDesc = guess.getEndpointDescriptor();
+    for (Mat desc : db.descs) {
+        closest = min(closest, pose_distant(guessDesc, desc));//turns out this is ||end1||^2 + ||end2||^2 + ...
+    }
+    return closest;
+}
 
 double findANN_old(Pose guess, MotionDB db) {
     double closest = numeric_limits<double>::lowest();

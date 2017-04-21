@@ -113,7 +113,7 @@ Mat reproject(Pose solution, Pose original, Mat camera, Vec2i size) {
         Point2d orth_pl_s = Point2d(pl_s.x + center[0], size[1] - (pl_s.y + center[1]));
         Point2d orth_pl_e = Point2d(pl_e.x + center[0], size[1] - (pl_s.y + center[1]));
 
-        //cv::line(out, orth_r_s_o, orth_r_e_o, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 1);
+        cv::line(out, orth_r_s_o, orth_r_e_o, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 1);
         cv::line(out, orth_s_o, orth_e_o, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 1);
         cv::line(out, orth_start, orth_end, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 5);
         //cv::line(out, orth_start_o, orth_end_o, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 3);

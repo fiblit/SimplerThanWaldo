@@ -30,7 +30,11 @@ double findANN_old(Pose p, MotionDB db);
 double get_scale_3D_construct(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, std::vector<double> avgBoneLength);
 std::vector<double> get_depthdiff_3D_construct(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, double scale, std::vector<double> avgBoneLength);
 Pose search_possible_3D(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, MotionDB db);
+Pose search_possible_3D(Pose * pose_2d, cv::Mat * descs, std::vector<double> avg_bone_length);
 
 Pose search_reprojections(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, PoseDB db);
+
+cv::Mat * motionDB_to_descs_T(std::vector<cv::Mat> *db);
+cv::Mat * motionDB_to_descs(std::vector<cv::Mat> * db);
 
 #endif//NN3D_H

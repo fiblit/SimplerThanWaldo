@@ -162,7 +162,7 @@ Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D
         x_new[0], x_new[1], x_new[2],
         dir_2d[0], dir_2d[1], dir_2d[2],
         0, 0, 1);
-    const int num_cameras = 10;
+    const int num_cameras = 60;
     vector<Mat> cameras = vector<Mat>(num_cameras);//orthographic
     for (int i = 0; i < num_cameras; i++) {
         double yaw = (360. / static_cast<double>(num_cameras)) * static_cast<double>(i);

@@ -89,12 +89,6 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //estimate2D.print();
     timer::stop(1);
 
-    timer::start(1, "get 2D bones & joints");
-    vector<Bone> bones2D = estimate2D.getBones();
-    vector<Vec3d> joints2D = estimate2D.getJoints();//different order than points3D
-    estimate2D.print();
-    timer::stop(1);
-
     timer::start(1, "create DB");
     MotionDB db = createDB(dbpath);
     //timer::start(1, "create projected db");
@@ -106,8 +100,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     for (int i = 0; i < bonelength.size(); i++)
         cout << Pose::bonetoStr((bonenames::bonenames)i) << ": " << bonelength[i] << "\n";
 
-    timer::start(1, "db -> matrix");
-    Mat * descs = motionDB_to_descs_T(&db.descs);
+    timer::start(1, "get 2D bones & joints");
+    vector<Bone> bones2D = estimate2D.getBones();
+    vector<Vec3d> joints2D = estimate2D.getJoints();//different order than points3D
+    estimate2D.print();
     timer::stop(1);
 
     //timer::start(1, "create kd tree of db");
@@ -116,7 +112,7 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //timer::stop(1);
 
     timer::start(1, "search db (by guessing 3D)");
-    Pose finalPose = search_possible_3D(&estimate2D, descs, bonelength);//motionDB/kd
+    Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
     //timer::start(1, "search db (by reprojections)");
     //Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
     timer::stop(1);
@@ -283,6 +279,7 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
                 guessPositions[guessBones[bonenames::RUPARM].start][2] += static_cast<float>(sign ? 1 : -1) * depthDiff[k];
             }
         }
+
         Pose guess(guessPositions);
         timer::stop(2);
 
@@ -293,66 +290,6 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
             closest = distance;
         }
         timer::stop(2);
-    }
-
-    return finalPose;
-}
-
-Mat * motionDB_to_descs_T(vector<Mat> * db) {
-    Mat * descs = new Mat(db->size(), 3 * bonenames::NUMBONES, CV_64F);
-
-    for (int i = 0; i < db->size(); i++)
-        for (int v = 0; v < 3 * bonenames::NUMBONES; v++)
-            descs->at<double>(i, v) = db->operator[](i).at<double>(v, 0);
-
-    return descs;
-}
-
-Mat * motionDB_to_descs(vector<Mat> * db) {
-    Mat * descs = new Mat(3 * bonenames::NUMBONES, db->size(), CV_64F);
-
-    for (int v = 0; v < 3 * bonenames::NUMBONES; v++)
-        for (int i = 0; i < db->size(); i++)
-            descs->at<double>(v, i) = db->operator[](i).at<double>(v, 0);
-
-    return descs;
-}
-
-Pose search_possible_3D(Pose * pose_2d, Mat * descs, vector<double> avg_bone_length) {
-    vector<Vec3d> joints2D = pose_2d->getJoints();
-    vector<Bone> bones2D = pose_2d->getBones();
-    double scale = get_scale_3D_construct(joints2D, bones2D, avg_bone_length);
-    vector<double> depthDiff = get_depthdiff_3D_construct(joints2D, bones2D, scale, avg_bone_length);
-
-    //for each possible flipping of the points' 3D coordinates signs
-    //a bit-level 0 means negative, a 1 means positive
-    vector<Mat> guess_vec_descs = vector<Mat>((1 << bonenames::NUMBONES));
-    timer::start(2, "generate guesses");
-    for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << bonenames::NUMBONES); boneDepthSign++) {
-        vector<Vec3d> guessPositions = joints2D;
-        vector<Bone> guessBones = bones2D;
-        for (int k = 0; k < bonenames::NUMBONES; k++) {
-            bool sign = bitset<bonenames::NUMBONES>(boneDepthSign)[k];
-            //the bonenames are ordered in such a way that this will work fine
-            //end.z = (sign)dZ + start.z
-            guessPositions[guessBones[k].end][2] = static_cast<float>((sign ? 1 : -1) * depthDiff[k] + guessPositions[guessBones[k].start][2]);
-            if ((bonenames::bonenames)k == bonenames::TORSO) {
-                guessPositions[guessBones[bonenames::LUPARM].start][2] += static_cast<float>(sign ? 1 : -1) * depthDiff[k];
-                guessPositions[guessBones[bonenames::RUPARM].start][2] += static_cast<float>(sign ? 1 : -1) * depthDiff[k];
-            }
-        }
-        guess_vec_descs.push_back(Pose(guessPositions).getDescriptor());
-    }
-    Mat * guess_descs = motionDB_to_descs(&guess_vec_descs);
-    timer::stop(2);
-
-    Mat similarites = (*descs) * (*guess_descs);//n x 30 * 30 x p = n x p -- wait this is bad. =l
-
-    Pose finalPose;
-    double closest = numeric_limits<double>::infinity();
-
-    for (unsigned short i = 0; i < (1 << bonenames::NUMBONES); i++) {
-
     }
 
     return finalPose;

@@ -17,7 +17,6 @@
 
 struct MotionDB {
     std::vector<cv::Mat> descs; //todo vector -> kd-tree
-    //cv::Mat descs; //pose_count x 30
     //descs are 30x1 row vectors
     std::vector<double> avgBoneLength;
 };

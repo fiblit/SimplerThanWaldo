@@ -89,10 +89,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //estimate2D.print();
     timer::stop(1);
 
-    //timer::start(1, "create DB");
-    //MotionDB db = createDB(dbpath);
-    timer::start(1, "create projected db");
-    PoseDB db = create_proj_DB(dbpath);
+    timer::start(1, "create DB");
+    MotionDB db = createDB(dbpath);
+    //timer::start(1, "create projected db");
+    //PoseDB db = create_proj_DB(dbpath);
     timer::stop(1);
 
     vector<double> bonelength = db.avgBoneLength;
@@ -111,10 +111,10 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     //cout << "max_depth: " << kd_tree::max_depth << endl;
     //timer::stop(1);
 
-    //timer::start(1, "search db (by guessing 3D)");
-    //Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
-    timer::start(1, "search db (by reprojections)");
-    Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
+    timer::start(1, "search db (by guessing 3D)");
+    Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
+    //timer::start(1, "search db (by reprojections)");
+    //Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
     timer::stop(1);
 
     return finalPose;
@@ -158,6 +158,10 @@ Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D
         x_new[0], dir_2d[0], 0,
         x_new[1], dir_2d[1], 0,
         x_new[2], dir_2d[2], 1);
+    Mat roll_to_dir_inv = (Mat_<double>(3, 3) <<
+        x_new[0], x_new[1], x_new[2],
+        dir_2d[0], dir_2d[1], dir_2d[2],
+        0, 0, 1);
     const int num_cameras = 10;
     vector<Mat> cameras = vector<Mat>(num_cameras);//orthographic
     for (int i = 0; i < num_cameras; i++) {
@@ -168,7 +172,7 @@ Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D
              cyaw,  0,  syaw,
              0,     1,  0,
             -syaw,  0,  cyaw);
-        cameras[i] = r_yaw * roll_to_dir *scale;
+        cameras[i] = roll_to_dir_inv * r_yaw * roll_to_dir * scale;
     }
     timer::stop(2);
 
@@ -216,6 +220,7 @@ Pose search_reprojections(std::vector<Vec3d> joints2D, std::vector<Bone> bones2D
         timer::stop(3);
     }
     timer::stop(2);
+    //return allThePoses;
     return bestPose;
 }
 
@@ -288,53 +293,6 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
     }
 
     return finalPose;
-}
-
-static cv::Scalar boneToColor(bonenames::bonenames bone) {
-    if (bone == bonenames::HEAD)    return Scalar(.95,.5,.5);
-    else if (bone == bonenames::TORSO)   return Scalar(.45,.5,.5);
-    else if (bone == bonenames::LUPARM)  return Scalar(.85,.5,.5);
-    else if (bone == bonenames::LLOARM)  return Scalar(.35,.5,.5);
-    else if (bone == bonenames::LUPLEG)  return Scalar(.75,.5,.5);
-    else if (bone == bonenames::LLOLEG)  return Scalar(.05,.5,.5);
-    else if (bone == bonenames::RUPARM)  return Scalar(.65,.5,.5);
-    else if (bone == bonenames::RLOARM)  return Scalar(.25,.5,.5);
-    else if (bone == bonenames::RUPLEG)  return Scalar(.55, .5, .5);
-    else if (bone == bonenames::RLOLEG)  return Scalar(.15, .5, .5);
-    else return Scalar(0,0,0);
-}
-
-Mat reproject(Pose solution, Mat camera, Vec2i size) {
-    Mat out = Mat::zeros(size[1], size[0], CV_8UC3);
-    //draw each bone as a projected line using the camera matrix as the projection
-    //undoubtedly need more parameters, I'm just lazy.
-    //The resulting mat is a 2D image. Should probably just be the projected space of
-    //the pose, and another function should actually draw it.
-    
-    vector<Vec3d> joints = solution.getJoints();
-
-    for (int j = 0; j < joints.size(); j++) {
-        Mat p = camera * Mat(Vec4d(joints[j][0], joints[j][1], joints[j][2], 1));
-        joints[j] = Vec3d(p.at<double>(0,0), p.at<double>(1,0), p.at<double>(2,0));
-    }
-
-    vector<Bone> bones = solution.getBones();
-    Vec2i center(size[0] / 2, size[1] / 2);
-    for (int k = 0; k < bones.size(); k++) {
-        Point3d start = joints[bones[k].start];
-        Point3d end = joints[bones[k].end];
-
-        Point2d orth_start = Point2d(start.x + center[0], size[1]-(start.y + center[1]));
-        Point2d orth_end = Point2d(end.x + center[0], size[1]-(end.y + center[1]));
-        //cout << start << " " << end << endl;
-        //cout << " " << orth_start << " " << orth_end << endl;
-        cv::line(out, orth_start, orth_end, boneToColor((bonenames::bonenames)k).mul(Scalar(180,255,255)), 5);
-    }
-
-    Mat hsl_out;
-    cv::cvtColor(out, hsl_out, CV_HLS2BGR);
-
-    return hsl_out;
 }
 
 //the closer to NUMBONES (i.e. the larger) the better.

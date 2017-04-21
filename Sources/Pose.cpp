@@ -114,14 +114,18 @@ Mat Pose::getDescriptor() {
         Mat vk = Ainv * Mat(uk);
         vk /= norm(vk);
         for (int axis = 0; axis < 3; axis++) {
-            //I think this is what I wanted. OpenCV seems a little arcane at times
-            //at least for directly manipulating matrices.
             descriptor.at<double>(3.*i + axis, 0) = vk.at<double>(static_cast<double>(axis), 0);
         }
     }
 
     return descriptor;
 }
+
+/*
+Mat Pose::getEndpointDescriptor() {
+    Mat descriptor = Mat(3 * bonenames::NUMBONES, 1, CV_64F);
+}
+*/
 
 //only for queries
 vector<Vec3d> Pose::getJoints() {

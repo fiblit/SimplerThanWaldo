@@ -184,6 +184,11 @@ int main(int argc, char** argv) {
         Point2d(-44,  167), Point2d(-54,  54), Point2d(-108,  2),//r arm
         Point2d(-26, -35), Point2d(12, -157), Point2d(-10, -247)//r leg
     };
+    int xt = 100; int yt = 100;
+    for (int i = 0; i < points.size(); i++) {
+        points[i].x += xt;
+        points[i].y += yt;
+    }
 
     vector<Vec3d> points3D = vector<Vec3d>(points.size());
     for (int i = 0; i < points.size(); i++)

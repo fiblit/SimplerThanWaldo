@@ -283,7 +283,7 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
 
     //could be parallelised, however the biggest speed up would come from a spatial data strucutre as that's O(n) -> O(log n)
     for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << bonenames::NUMBONES); boneDepthSign++) {
-        timer::start(2, "generate a guess");
+        //timer::start(2, "generate a guess");
         vector<Vec3d> guessPositions = joints2D;
         vector<Bone> guessBones = bones2D;
         for (int k = 0; k < bonenames::NUMBONES; k++) {
@@ -298,15 +298,15 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
         }
 
         Pose guess(guessPositions);
-        timer::stop(2);
+        //timer::stop(2);
 
-        timer::start(2, "find ANN");
+        //timer::start(2, "find ANN");
         double distance = findANN_old(guess, db);//kd_tree_of_db);
         if (distance < closest) {
             finalPose = guess;//should this maybe instead be the pose found in the ANN?
             closest = distance;
         }
-        timer::stop(2);
+        //timer::stop(2);
     }
 
     return finalPose;

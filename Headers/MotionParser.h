@@ -38,8 +38,8 @@ public:
     std::vector<Pose> getAllPoses();
     std::vector<cv::Mat> getAllPoseDescriptors();
 
-    void MotionParser::updateMotionDB(MotionDB * db);
-    void MotionParser::updatePoseDB(PoseDB * db);
+    void MotionParser::updateMotionDB(MotionDB * db, int increment);
+    void MotionParser::updatePoseDB(PoseDB * db, int increment);
 
     //deprecated
     MotionDB getMiniMotionDB();

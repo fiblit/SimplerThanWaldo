@@ -152,8 +152,19 @@ void mouse_callback(int event, int x, int y, int flags, void * userdata) {
     }
 }
 
-int main(int argc, char** argv) {
+Extractor * initialize_parameters() {
     timer::init_layers(10);//layers 0 through 9 allowed
+    string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose_mini";
+    cout << "parameter initialization complete" << endl;
+
+    Extractor * e = init_3D_extractor(databasepath, EXTRACT::BY_ITERATIVE_3D, 1);
+
+    return e;
+}
+
+int main(int argc, char** argv) {
+
+    Extractor * e = initialize_parameters();
 
     //init extract3D
     namespace j = jointnames;
@@ -174,18 +185,18 @@ int main(int argc, char** argv) {
         Point2d(-26, -35), Point2d(12, -157), Point2d(-10, -247)//r leg
     };
 
-    string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose_mini";
-    cout << "initialization complete" << endl;
-
     vector<Vec3d> points3D = vector<Vec3d>(points.size());
     for (int i = 0; i < points.size(); i++)
         //the hip should be at 0 depth
         points3D[i] = Vec3d(points[i].x, points[i].y, 0);
     Pose estimate2D(labels, points3D);
 
-    timer::start(0, "solution found");
+    timer::start(0, "find solution");
     //obtain Pose
-    Pose solution = extract3D(labels, points, databasepath);
+    Pose solution = extract3D(e, labels, points);//this is just for me to hard code
+    //Pose solution = extract3D_from_Pose_2D(e, pose_2d); //you will use this
+    delete e;
+
     vector<Vec3d> joints = solution.getJoints();
     for (Vec3d j : joints)
         j -= joints[jointnames::HIP];
@@ -196,14 +207,9 @@ int main(int argc, char** argv) {
     cout << "solution:\n";
     solution.print();
 
-    //temporary debug output
-    vector<Vec3d> outJoints = solution.getJoints();
-    vector<Bone> outBones = solution.getBones();
-    for (int k = 0; k < outBones.size(); k++) {
-        cout << "start: " << outJoints[outBones[k].start];
-        cout << "  end: " << outJoints[outBones[k].end] << endl;
-    }
+    cout << "\n DONE \n" << flush;
 
+    /*** INIT RASTER ***/
     //raster solution
     double yaw = 0, pitch = 0;
     Vec3d up(0, 1, 0);
@@ -221,8 +227,8 @@ int main(int argc, char** argv) {
     r.camera = virtualCamera; r.yaw = yaw; r.pitch = pitch;
     setMouseCallback("3D Pose", mouse_callback, &r);
 
-    cout << "\n DONE \n" << flush;
     imshow("3D Pose", out);
+    /*** END INIT RASTER ***/
 
     //no accidental quitting allowed
     for (;;)

@@ -29,12 +29,12 @@ static pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_
     return make_pair(labels, joints);
 }
 
-Pose extract3D_from_Pose_2D(Pose_2D pose, std::string databasepath) {
+Pose extract3D_from_Pose_2D(Extractor * e, Pose_2D pose) {
     pair<vector<jointnames::jointnames>, vector<Point2d>> result = Pose_2D_to_labeled_joints(pose);
-    return extract3D(result.first, result.second, databasepath);
+    return extract3D(e, result.first, result.second);
 }
 
-PoseDB create_proj_DB(string path) {
+PoseDB create_proj_DB(string path, int increment) {
     PoseDB db;
     db.poses = vector<Pose>();
     db.avgBoneLength = vector<double>(bonenames::NUMBONES, 0.0);
@@ -46,7 +46,7 @@ PoseDB create_proj_DB(string path) {
         //load file into MotionParser
         if (!is_directory(p.path())) {
             mp.open(p.path().string());
-            mp.updatePoseDB(&db);
+            mp.updatePoseDB(&db, increment);
         }
     }
     timer::stop(2);
@@ -55,7 +55,7 @@ PoseDB create_proj_DB(string path) {
 }
 
 //TODO: also return meta information(like avg bone lengths)/an actual class/struct for the DB
-MotionDB createDB(string path) {
+MotionDB createDB(string path, int increment) {
     MotionDB db;
     db.descs = vector<Mat>();
     db.avgBoneLength = vector<double>(bonenames::NUMBONES, 0.0);
@@ -67,7 +67,7 @@ MotionDB createDB(string path) {
         //load file into MotionParser
         if (!is_directory(p.path())) {
             mp.open(p.path().string());
-            mp.updateMotionDB(&db);
+            mp.updateMotionDB(&db, increment);
         }
     }
     timer::stop(2);
@@ -77,28 +77,46 @@ MotionDB createDB(string path) {
 
 //based on jiang
 //labels.size() MUST equal points.size()
-Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, string dbpath) {
+Extractor * init_3D_extractor(string dbpath, EXTRACT method, int increment) {
+    Extractor * e = new Extractor();
+    e->method = method;
+
+    vector<double> bonelength;
+    if (method == EXTRACT::BY_ITERATIVE_3D) {
+        timer::start(1, "create DB");
+        e->mdb = createDB(dbpath, increment);
+        bonelength = e->mdb.avgBoneLength;
+    }
+    else {
+        timer::start(1, "create projected db");
+        e->pdb = create_proj_DB(dbpath, increment);
+        bonelength = e->pdb.avgBoneLength;
+    }
+    timer::stop(1);
+
+    cout << "avg bone lengths:\n";
+    for (int i = 0; i < bonelength.size(); i++)
+        cout << Pose::bonetoStr((bonenames::bonenames)i) << ": " << bonelength[i] << "\n";
+
+    //timer::start(1, "create kd tree of db");
+    //kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
+    //cout << "max_depth: " << kd_tree::max_depth << endl;
+    //timer::stop(1);
+
+    return e;
+}
+
+Pose extract3D(Extractor * e, vector<jointnames::jointnames> labels, vector<Point2d> points) {
     timer::start(1, "create ortho projection of 2D pose");
     //create 2D Pose
     vector<Vec3d> points3D = vector<Vec3d>(points.size());
     for (int i = 0; i < points.size(); i++)
-        //the hip should be at 0 depth
+        //the hip should be at 0 depth1
         points3D[i] = Vec3d(points[i].x, points[i].y, 0);
 
     Pose estimate2D(labels, points3D);
     //estimate2D.print();
     timer::stop(1);
-
-    //timer::start(1, "create DB");
-    //MotionDB db = createDB(dbpath);
-    timer::start(1, "create projected db");
-    PoseDB db = create_proj_DB(dbpath);
-    timer::stop(1);
-
-    vector<double> bonelength = db.avgBoneLength;
-    cout << "avg bone lengths:\n";
-    for (int i = 0; i < bonelength.size(); i++)
-        cout << Pose::bonetoStr((bonenames::bonenames)i) << ": " << bonelength[i] << "\n";
 
     timer::start(1, "get 2D bones & joints");
     vector<Bone> bones2D = estimate2D.getBones();
@@ -106,15 +124,15 @@ Pose extract3D(vector<jointnames::jointnames> labels, vector<Point2d> points, st
     estimate2D.print();
     timer::stop(1);
 
-    //timer::start(1, "create kd tree of db");
-    //kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
-    //cout << "max_depth: " << kd_tree::max_depth << endl;
-    //timer::stop(1);
-
-    //timer::start(1, "search db (by guessing 3D)");
-    //Pose finalPose = search_possible_3D(joints2D, bones2D, db);//motionDB/kd
-    timer::start(1, "search db (by reprojections)");
-    Pose finalPose = search_reprojections(joints2D, bones2D, db);//poseDB
+    Pose finalPose;
+    if (e->method == EXTRACT::BY_ITERATIVE_3D) {
+        timer::start(1, "search db (by iterative 3D)");
+        finalPose = search_possible_3D(joints2D, bones2D, e->mdb);//motionDB/kd
+    }
+    else {
+        timer::start(1, "search db (by reprojections)");
+        finalPose = search_reprojections(joints2D, bones2D, e->pdb);//poseDB
+    }
     timer::stop(1);
 
     return finalPose;

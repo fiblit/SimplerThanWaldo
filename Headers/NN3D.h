@@ -18,8 +18,15 @@ I'll actually do this tomorrow morning. Been a bit busy.
 MotionDB createDB(std::string databasepath);
 
 //some "main" function that takes 2D points and gives back a Pose
-Pose extract3D_from_Pose_2D(Pose_2D pose, std::string databasepath);
-Pose extract3D(std::vector<jointnames::jointnames> labels, std::vector<cv::Point2d> points, std::string databasepath);
+enum class EXTRACT { BY_REPROJECTION, BY_ITERATIVE_3D};
+struct Extractor {
+    PoseDB pdb;//kd_tree * db;
+    MotionDB mdb;
+    EXTRACT method;
+};
+Extractor * init_3D_extractor(std::string databasepath, EXTRACT method, int increment);
+Pose extract3D_from_Pose_2D(Extractor * e, Pose_2D pose);
+Pose extract3D(Extractor * e, std::vector<jointnames::jointnames> labels, std::vector<cv::Point2d> points);
 
 //see jiang
 double pose_similar(cv::Mat poseDescriptor1, cv::Mat poseDescriptor2);

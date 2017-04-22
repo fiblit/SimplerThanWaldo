@@ -36,31 +36,37 @@ Pose MotionParser::getNextPose() {
         throw overflow_error("EOF");
 }
 
-void MotionParser::updatePoseDB(PoseDB * db) {
+void MotionParser::updatePoseDB(PoseDB * db, int increment) {
     string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
+
+    int count = 0;
 
     for (size_t afterLastSplit = 0, nextSplitEnd = 0;
         (nextSplitEnd = file.find('\n', afterLastSplit)) != string::npos
         && nextSplitEnd != afterLastSplit;
         afterLastSplit = nextSplitEnd + 1) {
 
-        string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
-        vector<Vec3d> vjp = this->getJointPositions(line);
-        Pose p = Pose(this->currentJointNames, vjp);
+        if ((count++) % increment == 0) {
+            count = 1;
 
-        vector<Bone> bones = p.getBones();
-        vector<Vec3d> joints = p.getJoints();
-        for (int i = 0; i < bonenames::NUMBONES; i++) {
-            Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
-            double len = sqrt(diff.dot(diff));
-            db->avgBoneLength[i] = (len + db->poses.size() * db->avgBoneLength[i]) / (db->poses.size() + 1);
+            string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
+            vector<Vec3d> vjp = this->getJointPositions(line);
+            Pose p = Pose(this->currentJointNames, vjp);
+
+            vector<Bone> bones = p.getBones();
+            vector<Vec3d> joints = p.getJoints();
+            for (int i = 0; i < bonenames::NUMBONES; i++) {
+                Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
+                double len = sqrt(diff.dot(diff));
+                db->avgBoneLength[i] = (len + db->poses.size() * db->avgBoneLength[i]) / (db->poses.size() + 1);
+            }
+
+            db->poses.push_back(p);
         }
-
-        db->poses.push_back(p);
     }
 }
 
-void MotionParser::updateMotionDB(MotionDB * db) {
+void MotionParser::updateMotionDB(MotionDB * db, int increment) {
     string file = static_cast<stringstream const&>(stringstream() << this->currentFile.rdbuf()).str();
 
     //compare in aggregate case for with/without
@@ -76,29 +82,36 @@ void MotionParser::updateMotionDB(MotionDB * db) {
      
     //for each pose
     //int i = 0;
+
+    int count = 0;
+
     for ( size_t afterLastSplit = 0, nextSplitEnd = 0;
         //I should time that find
           (nextSplitEnd = file.find('\n', afterLastSplit)) != string::npos 
             && nextSplitEnd != afterLastSplit;//eof
           afterLastSplit = nextSplitEnd + 1) {
 
-        string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
+        if ((count++) % increment == 0) {
+            count = 1;
 
-        vector<Vec3d> vjp = this->getJointPositions(line);
+            string line = file.substr(afterLastSplit, nextSplitEnd - afterLastSplit);
 
-        Pose p = Pose(this->currentJointNames, vjp);
+            vector<Vec3d> vjp = this->getJointPositions(line);
 
-        vector<Bone> bones = p.getBones();
-        vector<Vec3d> joints = p.getJoints();
-        for (int i = 0; i < bonenames::NUMBONES; i++) {
-            Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
-            double len = sqrt(diff.dot(diff));
-            db->avgBoneLength[i] = (len + db->descs.size() * db->avgBoneLength[i]) / (db->descs.size() + 1);
+            Pose p = Pose(this->currentJointNames, vjp);
+
+            vector<Bone> bones = p.getBones();
+            vector<Vec3d> joints = p.getJoints();
+            for (int i = 0; i < bonenames::NUMBONES; i++) {
+                Vec3d diff = joints[bones[i].end] - joints[bones[i].start];
+                double len = sqrt(diff.dot(diff));
+                db->avgBoneLength[i] = (len + db->descs.size() * db->avgBoneLength[i]) / (db->descs.size() + 1);
+            }
+
+            Mat desc = p.getDescriptor();//.getEndpointDescriptor();//getDescriptor();
+
+            db->descs.push_back(desc);
         }
-
-        Mat desc = p.getDescriptor();//.getEndpointDescriptor();//getDescriptor();
-
-        db->descs.push_back(desc);
     }
 }
 

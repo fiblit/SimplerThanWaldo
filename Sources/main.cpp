@@ -65,7 +65,7 @@ static cv::Scalar boneToColor(bonenames::bonenames bone) {
     else if (bone == bonenames::RLOARM)  return Scalar(.25, .5, .5);
     else if (bone == bonenames::RUPLEG)  return Scalar(.55, .5, .5);
     else if (bone == bonenames::RLOLEG)  return Scalar(.15, .5, .5);
-    else return Scalar(0, 0, 0);
+    else return Scalar(1, .5, .5);
 }
 
 Mat reproject(Pose solution, Pose original, Mat camera, Vec2i size) {
@@ -80,15 +80,21 @@ Mat reproject(Pose solution, Pose original, Mat camera, Vec2i size) {
     vector<Vec3d> planar = solution.getJoints();
 
     for (int j = 0; j < joints.size(); j++) {
+        planar[j] = Vec3d(0, joints[j][0], joints[j][2]);
+
         Mat p = camera * Mat(Vec4d(joints[j][0], joints[j][1], joints[j][2], 1));
-        Mat o = camera * Mat(Vec4d(o_j[j][0], o_j[j][1], o_j[j][2], 1));
         joints[j] = Vec3d(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
-        p = camera * Mat(Vec4d(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0), 1));
+        p = camera * Mat(Vec4d(planar[j][0], planar[j][1], planar[j][2], 1));
         planar[j] = Vec3d(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
-        o_j[j] = Vec3d(o.at<double>(0, 0), o.at<double>(1, 0), o.at<double>(2, 0));
+        p = camera * Mat(Vec4d(o_j[j][0], o_j[j][1], o_j[j][2], 1));
+        o_j[j] = Vec3d(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
     }
 
     vector<Bone> bones = solution.getBones();
+    bones.push_back(Bone(jointnames::HIP, jointnames::LFEMUR));
+    bones.push_back(Bone(jointnames::HIP, jointnames::RFEMUR));
+    bones.push_back(Bone(jointnames::CLAVICLE, jointnames::RHUMERUS));
+    bones.push_back(Bone(jointnames::CLAVICLE, jointnames::LHUMERUS));
     Vec2i center(size[0] / 2, size[1] / 2);
     for (int k = 0; k < bones.size(); k++) {
         Point3d start = joints[bones[k].start];
@@ -117,8 +123,15 @@ Mat reproject(Pose solution, Pose original, Mat camera, Vec2i size) {
         cv::line(out, orth_s_o, orth_e_o, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 1);
         cv::line(out, orth_start, orth_end, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 5);
         //cv::line(out, orth_start_o, orth_end_o, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 3);
-        //cv::line (out, orth_pl_s, orth_pl_e, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 5);
+        cv::line (out, orth_pl_s, orth_pl_e, boneToColor((bonenames::bonenames)k).mul(Scalar(180, 255, 255)), 5);
     }
+
+    Mat p = camera * Mat(Vec4d(joints[jointnames::HIP][0], joints[jointnames::HIP][1], joints[jointnames::HIP][2], 1));
+    Point2d axis_forward_s(p.at<double>(0,0) + center[0], size[1] - (p.at<double>(1,0) + center[1]));
+    double dist_from_hip_to_femur = norm(joints[jointnames::LFEMUR] - joints[jointnames::HIP]);
+    p = camera * Mat(Vec4d(joints[jointnames::HIP][0], joints[jointnames::HIP][1], joints[jointnames::HIP][2] - dist_from_hip_to_femur, 1));
+    Point2d axis_forward_e(p.at<double>(0, 0) + center[0], size[1] - (p.at<double>(1, 0) + center[1]));
+    cv::arrowedLine(out, axis_forward_s, axis_forward_e, Scalar(.5, .5, .5).mul(Scalar(180, 255, 255)), 3, 8, 0, 0.3);
 
     Mat hsl_out;
     cv::cvtColor(out, hsl_out, CV_HLS2BGR);
@@ -184,7 +197,7 @@ int main(int argc, char** argv) {
         Point2d(-44,  167), Point2d(-54,  54), Point2d(-108,  2),//r arm
         Point2d(-26, -35), Point2d(12, -157), Point2d(-10, -247)//r leg
     };
-    int xt = 100; int yt = 100;
+    int xt = 0; int yt = 0;
     for (int i = 0; i < points.size(); i++) {
         points[i].x += xt;
         points[i].y += yt;

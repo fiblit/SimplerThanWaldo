@@ -170,7 +170,7 @@ Extractor * initialize_parameters() {
     string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose_mini";
     cout << "parameter initialization complete" << endl;
 
-    Extractor * e = init_3D_extractor(databasepath, EXTRACT::BY_ITERATIVE_3D, 1);
+    Extractor * e = init_3D_extractor(databasepath, EXTRACT::BY_ITERATIVE_KD, 1);
 
     return e;
 }

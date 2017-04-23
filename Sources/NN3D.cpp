@@ -87,6 +87,15 @@ Extractor * init_3D_extractor(string dbpath, EXTRACT method, int increment) {
         e->mdb = createDB(dbpath, increment);
         bonelength = e->mdb.avgBoneLength;
     }
+    else if (method == EXTRACT::BY_ITERATIVE_KD) {
+        timer::start(1, "create db for kd tree");
+        e->mdb = createDB(dbpath, increment);
+        bonelength = e->mdb.avgBoneLength;
+        timer::stop(1);
+        timer::start(1, "create kd tree of db");
+        e->kddb = new kd_tree(e->mdb.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
+        cout << "max_depth: " << kd_tree::max_depth << endl;
+    }
     else {
         timer::start(1, "create projected db");
         e->pdb = create_proj_DB(dbpath, increment);
@@ -97,11 +106,6 @@ Extractor * init_3D_extractor(string dbpath, EXTRACT method, int increment) {
     cout << "avg bone lengths:\n";
     for (int i = 0; i < bonelength.size(); i++)
         cout << Pose::bonetoStr((bonenames::bonenames)i) << ": " << bonelength[i] << "\n";
-
-    //timer::start(1, "create kd tree of db");
-    //kd_tree * kd_tree_of_db = new kd_tree(db.descs, 30, pose_distant);//pretty sure since that's squared distance I need to change the search
-    //cout << "max_depth: " << kd_tree::max_depth << endl;
-    //timer::stop(1);
 
     return e;
 }
@@ -128,6 +132,10 @@ Pose extract3D(Extractor * e, vector<jointnames::jointnames> labels, vector<Poin
     if (e->method == EXTRACT::BY_ITERATIVE_3D) {
         timer::start(1, "search db (by iterative 3D)");
         finalPose = search_possible_3D(joints2D, bones2D, e->mdb);//motionDB/kd
+    }
+    else if (e->method == EXTRACT::BY_ITERATIVE_KD) {
+        timer::start(1, "search db (by iterative KD)");
+        finalPose = search_possible_3D_by_kd(joints2D, bones2D, e->mdb.avgBoneLength, e->kddb);
     }
     else {
         timer::start(1, "search db (by reprojections)");
@@ -312,6 +320,46 @@ Pose search_possible_3D(vector<Vec3d> joints2D, vector<Bone> bones2D, MotionDB d
     return finalPose;
 }
 
+//this is based on jiang's algorithm
+Pose search_possible_3D_by_kd(vector<Vec3d> joints2D, vector<Bone> bones2D, vector<double> avgBoneLength, kd_tree * kddb) {
+    double scale = get_scale_3D_construct(joints2D, bones2D, avgBoneLength);
+    vector<double> depthDiff = get_depthdiff_3D_construct(joints2D, bones2D, scale, avgBoneLength);
+
+    Pose finalPose;
+    double closest = numeric_limits<double>::infinity();
+    //for each possible flipping of the points' 3D coordinates signs
+    //a bit-level 0 means negative, a 1 means positive
+
+    //could be parallelised, however the biggest speed up would come from a spatial data strucutre as that's O(n) -> O(log n)
+    for (unsigned short boneDepthSign = 0; boneDepthSign < (1 << bonenames::NUMBONES); boneDepthSign++) {
+        //timer::start(2, "generate a guess");
+        vector<Vec3d> guessPositions = joints2D;
+        vector<Bone> guessBones = bones2D;
+        for (int k = 0; k < bonenames::NUMBONES; k++) {
+            bool sign = bitset<bonenames::NUMBONES>(boneDepthSign)[k];
+            //the bonenames are ordered in such a way that this will work fine
+            //end.z = (sign)dZ + start.z
+            guessPositions[guessBones[k].end][2] = static_cast<float>((sign ? 1 : -1) * depthDiff[k] + guessPositions[guessBones[k].start][2]);
+            if ((bonenames::bonenames)k == bonenames::TORSO) {
+                guessPositions[guessBones[bonenames::LUPARM].start][2] += static_cast<float>(sign ? 1 : -1) * depthDiff[k];
+                guessPositions[guessBones[bonenames::RUPARM].start][2] += static_cast<float>(sign ? 1 : -1) * depthDiff[k];
+            }
+        }
+
+        Pose guess(guessPositions);
+        //timer::stop(2);
+
+        timer::start(2, "find ANN");
+        double distance = findANN(guess, kddb);
+        if (distance < closest) {
+            finalPose = guess;//should this maybe instead be the pose found in the ANN?
+            closest = distance;
+        }
+        timer::stop(2);
+    }
+
+    return finalPose;
+}
 //the closer to NUMBONES (i.e. the larger) the better.
 double pose_similar(Mat poseDescriptor1, Mat poseDescriptor2) {
     return poseDescriptor1.dot(poseDescriptor2);

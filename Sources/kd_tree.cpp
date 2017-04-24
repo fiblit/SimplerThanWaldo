@@ -161,7 +161,7 @@ pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int depth, kd_tree 
         else
             next = t->right;
 
-        if (next != nullptr && nodes_checked < 1000) {
+        if (next != nullptr && nodes_checked < 2000) {
             pair<kd_tree *, double> other_side = nn_search_(p, (axis + 1) % this->k, next);
             if (other_side.second < dist) {
                 dist = other_side.second;

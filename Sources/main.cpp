@@ -80,11 +80,11 @@ Mat reproject(Pose solution, Pose original, Mat camera, Vec2i size) {
     vector<Vec3d> planar = solution.getJoints();
 
     for (int j = 0; j < joints.size(); j++) {
-        planar[j] = Vec3d(0, joints[j][0], joints[j][2]);
+        planar[j] = Vec3d(joints[j][1], joints[j][0], 0);
 
         Mat p = camera * Mat(Vec4d(joints[j][0], joints[j][1], joints[j][2], 1));
         joints[j] = Vec3d(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
-        p = camera * Mat(Vec4d(planar[j][0], planar[j][1], planar[j][2], 1));
+        p = /*camera **/Mat(Vec4d(planar[j][0], planar[j][1], planar[j][2], 1));
         planar[j] = Vec3d(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
         p = camera * Mat(Vec4d(o_j[j][0], o_j[j][1], o_j[j][2], 1));
         o_j[j] = Vec3d(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
@@ -129,7 +129,7 @@ Mat reproject(Pose solution, Pose original, Mat camera, Vec2i size) {
     Mat p = camera * Mat(Vec4d(joints[jointnames::HIP][0], joints[jointnames::HIP][1], joints[jointnames::HIP][2], 1));
     Point2d axis_forward_s(p.at<double>(0,0) + center[0], size[1] - (p.at<double>(1,0) + center[1]));
     double dist_from_hip_to_femur = norm(joints[jointnames::LFEMUR] - joints[jointnames::HIP]);
-    p = camera * Mat(Vec4d(joints[jointnames::HIP][0], joints[jointnames::HIP][1], joints[jointnames::HIP][2] - dist_from_hip_to_femur, 1));
+    p = camera * Mat(Vec4d(joints[jointnames::HIP][0], joints[jointnames::HIP][1], joints[jointnames::HIP][2] + dist_from_hip_to_femur, 1));
     Point2d axis_forward_e(p.at<double>(0, 0) + center[0], size[1] - (p.at<double>(1, 0) + center[1]));
     cv::arrowedLine(out, axis_forward_s, axis_forward_e, Scalar(.5, .5, .5).mul(Scalar(180, 255, 255)), 3, 8, 0, 0.3);
 
@@ -167,7 +167,7 @@ void mouse_callback(int event, int x, int y, int flags, void * userdata) {
 
 Extractor * initialize_parameters() {
     timer::init_layers(10);//layers 0 through 9 allowed
-    string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose_mini";
+    string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose";
     cout << "parameter initialization complete" << endl;
 
     Extractor * e = init_3D_extractor(databasepath, EXTRACT::BY_ITERATIVE_KD, 1);

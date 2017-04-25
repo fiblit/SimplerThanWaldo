@@ -111,8 +111,12 @@ void kd_tree::build(std::vector<Unit> list, int depth) {
 //https://en.wikipedia.org/wiki/K-d_tree#Nearest_neighbour_search
 //very very very very slow
 pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int depth, kd_tree * t) {
+    static int nodes_checked = 0;
+
     kd_tree * cur_best = nullptr;
     double dist = std::numeric_limits<double>::infinity();
+    //if (nodes_checked > 1000)
+    //    return pair<kd_tree *, double>(cur_best, dist);
 
     int axis = depth % this->k;
     //kd_tree::max_depth++;
@@ -157,7 +161,7 @@ pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int depth, kd_tree 
         else
             next = t->right;
 
-        if (next != nullptr) {
+        if (next != nullptr && nodes_checked < 1000) {
             pair<kd_tree *, double> other_side = nn_search_(p, (axis + 1) % this->k, next);
             if (other_side.second < dist) {
                 dist = other_side.second;
@@ -166,6 +170,7 @@ pair<kd_tree *, double> kd_tree::nn_search_(kd_tree::Unit p, int depth, kd_tree 
         }
     }
 
+    nodes_checked++;
     return pair<kd_tree *, double>(cur_best, dist);
 }
 
@@ -177,6 +182,5 @@ pair<kd_tree::Unit, double> kd_tree::nn_search(Unit p) {
     //cv::transpose(p, m2);
     //cout << m1 << "\n" << m2 << endl;
     //cout << max_depth << " " << result.second << endl;
-
     return pair<Unit, double>(result.first->data, result.second);
 }

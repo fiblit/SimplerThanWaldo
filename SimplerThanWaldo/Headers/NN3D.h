@@ -18,10 +18,11 @@ I'll actually do this tomorrow morning. Been a bit busy.
 MotionDB createDB(std::string databasepath);
 
 //some "main" function that takes 2D points and gives back a Pose
-enum class EXTRACT { BY_REPROJECTION, BY_ITERATIVE_3D};
+enum class EXTRACT { BY_REPROJECTION, BY_ITERATIVE_3D, BY_ITERATIVE_KD};
 struct Extractor {
-    PoseDB pdb;//kd_tree * db;
+    PoseDB pdb;
     MotionDB mdb;
+    kd_tree * kddb;
     EXTRACT method;
 };
 Extractor * init_3D_extractor(std::string databasepath, EXTRACT method, int increment);
@@ -38,6 +39,7 @@ double findANN_old(Pose p, MotionDB db);
 double get_scale_3D_construct(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, std::vector<double> avgBoneLength);
 std::vector<double> get_depthdiff_3D_construct(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, double scale, std::vector<double> avgBoneLength);
 Pose search_possible_3D(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, MotionDB db);
+Pose search_possible_3D_by_kd(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, std::vector<double> avgBoneLength, kd_tree * kddb);
 
 Pose search_reprojections(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, PoseDB db);
 

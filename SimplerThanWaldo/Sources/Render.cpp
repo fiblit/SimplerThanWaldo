@@ -176,6 +176,7 @@ Extractor * initialize_parameters() {
     return e;
 }
 
+/*
 int main(int argc, char** argv) {
 
     Extractor * e = initialize_parameters();
@@ -228,7 +229,7 @@ int main(int argc, char** argv) {
 
     cout << "\n DONE \n" << flush;
 
-    /*** INIT RASTER ***/
+    / *** INIT RASTER *** /
     //raster solution
     double yaw = 0, pitch = 0;
     Vec3d up(0, 1, 0);
@@ -253,3 +254,4 @@ int main(int argc, char** argv) {
     for (;;)
         waitKey(0);
 }
+*/

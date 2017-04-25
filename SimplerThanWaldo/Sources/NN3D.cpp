@@ -1,7 +1,7 @@
 #include "NN3D.h"
 #include "timer.h"
 
-#include <experimental\filesystem>
+#include <experimental/filesystem>
 #include <bitset>
 
 using namespace std;
@@ -349,13 +349,13 @@ Pose search_possible_3D_by_kd(vector<Vec3d> joints2D, vector<Bone> bones2D, vect
         Pose guess(guessPositions);
         //timer::stop(2);
 
-        timer::start(2, "find ANN");
+        //timer::start(2, "find ANN");
         double distance = findANN(guess, kddb);
         if (distance < closest) {
             finalPose = guess;//should this maybe instead be the pose found in the ANN?
             closest = distance;
         }
-        timer::stop(2);
+        //timer::stop(2);
     }
 
     return finalPose;

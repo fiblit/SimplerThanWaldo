@@ -475,25 +475,25 @@ void Draw_Pose(Mat Frame_In, Mat* Frame_Out, Pose_2D Frame_Pose, int Mode)
 			
 			
 			//then draw all of the joints as circles
-			circle(*Frame_Out, Frame_Pose.Chest_C, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Chest_L, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Chest_R, 3, Scalar(255,0,0));
+			circle(*Frame_Out, Frame_Pose.Chest_C, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Chest_L, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Chest_R, 3, Scalar(255,0,0),-1);
 			
-			circle(*Frame_Out, Frame_Pose.Hip_C, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Hip_L, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Hip_R, 3, Scalar(255,0,0));
+			circle(*Frame_Out, Frame_Pose.Hip_C, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Hip_L, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Hip_R, 3, Scalar(255,0,0),-1);
 			
-			circle(*Frame_Out, Frame_Pose.Head_Top, 3, Scalar(255,0,0));
+			circle(*Frame_Out, Frame_Pose.Head_Top, 3, Scalar(255,0,0),-1);
 			
-			circle(*Frame_Out, Frame_Pose.Elbow_L, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Wrist_L, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Elbow_R, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Wrist_R, 3, Scalar(255,0,0));
+			circle(*Frame_Out, Frame_Pose.Elbow_L, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Wrist_L, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Elbow_R, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Wrist_R, 3, Scalar(255,0,0),-1);
 			
-			circle(*Frame_Out, Frame_Pose.Knee_L, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Ankle_L, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Knee_R, 3, Scalar(255,0,0));
-			circle(*Frame_Out, Frame_Pose.Ankle_R, 3, Scalar(255,0,0));
+			circle(*Frame_Out, Frame_Pose.Knee_L, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Ankle_L, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Knee_R, 3, Scalar(255,0,0),-1);
+			circle(*Frame_Out, Frame_Pose.Ankle_R, 3, Scalar(255,0,0),-1);
 			
 			break;
 		}
@@ -1628,7 +1628,7 @@ int main(int argc, char* argv[])
 	}
 	
 	First_Frame.convertTo(First_Frame, CV_8U);
-	resize(First_Frame, First_Frame, Size(1280, 720), 0, 0, INTER_LINEAR);
+	resize(First_Frame, First_Frame, Size(1280, 720), 0, 0, INTER_NEAREST);
 
 
 	//show the frame
@@ -1736,7 +1736,7 @@ int main(int argc, char* argv[])
 	}
 	
 	Next_Frame.convertTo(Next_Frame, CV_8U);
-	resize(Next_Frame, Next_Frame, Size(1280, 720), 0, 0, INTER_LINEAR);
+	resize(Next_Frame, Next_Frame, Size(1280, 720), 0, 0, INTER_NEAREST);
 
 	
 	GaussianBlur(Next_Frame, Next_Frame_Gray_Blurred, Size(5,5), 0, 0, BORDER_DEFAULT);
@@ -1770,7 +1770,7 @@ int main(int argc, char* argv[])
 		}
 		
 		Next_Frame.convertTo(Next_Frame, CV_8U);
-		resize(Next_Frame, Next_Frame, Size(1280, 720), 0, 0, INTER_LINEAR);
+		resize(Next_Frame, Next_Frame, Size(1280, 720), 0, 0, INTER_NEAREST);
 		
 		GaussianBlur(Next_Frame, Next_Frame_Gray_Blurred, Size(5,5), 0, 0, BORDER_DEFAULT);
 
@@ -1961,7 +1961,7 @@ int main(int argc, char* argv[])
 		imshow("Detected 2D Pose", Frame_With_Pose); 
 		Output_Video.write(Frame_With_Pose);
 
-		waitKey(0);
+		//waitKey(0);
 		
 		if (waitKey(20) == 27) //wait for 'esc' key press for 10ms. If 'esc' key is pressed, break loop
 		{

@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
     setMouseCallback("3D Pose", mouse_callback, &r);
 
     imshow("3D Pose", out);
-    /*** END INIT RASTER ***/
+    / *** END INIT RASTER *** /
 
     //no accidental quitting allowed
     for (;;)

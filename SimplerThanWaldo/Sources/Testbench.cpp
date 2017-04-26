@@ -1436,7 +1436,7 @@ int main(int argc, char* argv[])
 
 	/*****Dalton Safe Zone*****/
 	//extract files
-	Extractor * e = initialize_parameters();
+	Results * r_3d = initialize_parameters();
 	/*****Dalton Safe Zone*****/
 
 
@@ -1938,7 +1938,11 @@ int main(int argc, char* argv[])
 
 
 		/*****Dalton Safe Zone*****/
-		Pose solution = extract3D_from_Pose_2D(e, Current_Pose);
+		Pose solution = extract3D_from_Pose_2D(r_3d->extractor, Current_Pose);
+        r_3d->solution = solution;
+        pair<vector<jointnames::jointnames>, vector<Vec3d>> labeled_3D_joints = Pose2D_to_labeled_3Djoints(Current_Pose);
+        r_3d->original = Pose(labeled_3D_joints.first, labeled_3D_joints.second);
+        r_3d->project = true;
 		/*****Dalton Safe Zone*****/
 
 

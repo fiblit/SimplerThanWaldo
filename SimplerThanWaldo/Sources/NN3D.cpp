@@ -8,7 +8,7 @@ using namespace std;
 using namespace cv;
 using namespace std::experimental::filesystem;
 
-static pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_joints(Pose_2D p) {
+pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_joints(Pose_2D p) {
     namespace j = jointnames;
     vector<j::jointnames> labels = {
         j::HIP, j::CLAVICLE, j::HEAD_END, //spine, there is also a HEAD joint, that I may switch HEAD_END to
@@ -27,6 +27,25 @@ static pair<vector<jointnames::jointnames>, vector<Point2d>> Pose_2D_to_labeled_
     };
 
     return make_pair(labels, joints);
+}
+pair<vector<jointnames::jointnames>, vector<Vec3d>> Pose2D_to_labeled_3Djoints(Pose_2D p) {
+    namespace j = jointnames;
+    vector<j::jointnames> labels = {
+        j::HIP, j::CLAVICLE, j::HEAD_END, //spine, there is also a HEAD joint, that I may switch HEAD_END to
+        j::LHUMERUS, j::LRADIUS, j::LWRIST, //l arm
+        j::LFEMUR, j::LTIBIA, j::LFOOT, //l leg
+        j::RHUMERUS, j::RRADIUS, j::RWRIST, //r arm
+        j::RFEMUR, j::RTIBIA, j::RFOOT //r leg
+    };
+    vector<Vec3d> joints3D = {
+        Vec3d(p.Hip_C.x, p.Hip_C.y, 0), Vec3d(p.Chest_C.x, p.Chest_C.y, 0), Vec3d(p.Head_Top.x, p.Head_Top.y, 0),//spine
+        Vec3d(p.Chest_L.x, p.Chest_L.y, 0), Vec3d(p.Elbow_L.x, p.Elbow_L.y, 0), Vec3d(p.Wrist_L.x, p.Wrist_L.y, 0),//l arm
+        Vec3d(p.Hip_L.x, p.Hip_L.y, 0), Vec3d(p.Knee_L.x, p.Knee_L.y, 0), Vec3d(p.Ankle_L.x, p.Ankle_L.y, 0),//l leg
+        Vec3d(p.Chest_R.x, p.Chest_R.y, 0), Vec3d(p.Elbow_R.x, p.Elbow_R.y, 0), Vec3d(p.Wrist_R.x, p.Wrist_R.y, 0),//r arm
+        Vec3d(p.Hip_R.x, p.Hip_R.y, 0), Vec3d(p.Knee_R.x, p.Knee_R.y, 0), Vec3d(p.Ankle_R.x, p.Ankle_R.y, 0)//r leg
+    };
+
+    return make_pair(labels, joints3D);
 }
 
 Pose extract3D_from_Pose_2D(Extractor * e, Pose_2D pose) {

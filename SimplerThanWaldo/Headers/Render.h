@@ -9,6 +9,15 @@ cv::Mat ortho_cam(cv::Vec3d look, cv::Vec3d up, double scale, cv::Vec3d trans);
 cv::Mat reproject(Pose solution, Pose original, cv::Mat camera, cv::Vec2i size);
 void mouse_callback(int event, int x, int y, int flags, void * userdata);
 
+struct Results {
+    Mat img;
+    Pose solution;
+    Pose original;
+    Mat camera; double yaw, pitch;
+    bool project;
+    Extractor * extractor;
+};
+
 //what you call
-Extractor * initialize_parameters();
+Results * initialize_parameters();
 

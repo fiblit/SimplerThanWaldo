@@ -48,13 +48,6 @@ Mat ortho_cam(Vec3d look, Vec3d up, double scale, Vec3d trans) {
     return cam;
 }
 
-struct Results {
-    Mat img;
-    Pose solution;
-    Pose original;
-    Mat camera; double yaw, pitch;
-};
-
 static cv::Scalar boneToColor(bonenames::bonenames bone) {
     if (bone == bonenames::HEAD)    return Scalar(.95, .5, .5);
     else if (bone == bonenames::TORSO)   return Scalar(.45, .5, .5);
@@ -158,7 +151,8 @@ void mouse_callback(int event, int x, int y, int flags, void * userdata) {
             r->yaw += dx * 3.14159 / 180.;
             r->pitch += dy * 3.14159 / 180.;
             r->camera = ortho_cam(r->yaw, r->pitch, 1.0, Vec3d(0, 0, 0));
-            r->img = reproject(r->solution, r->original, r->camera, Vec2i(800, 600));
+            if (r->project)
+                r->img = reproject(r->solution, r->original, r->camera, Vec2i(800, 600));
             imshow("3D Pose", r->img);
         }
         prev_x = x;
@@ -166,14 +160,33 @@ void mouse_callback(int event, int x, int y, int flags, void * userdata) {
     }
 }
 
-Extractor * initialize_parameters() {
+Results * initialize_parameters() {
     timer::init_layers(10);//layers 0 through 9 allowed
     string databasepath = (PROJECT_SOURCE_DIR)+(std::string)"/../csvpose_mini";
     cout << "parameter initialization complete" << endl;
 
     Extractor * e = init_3D_extractor(databasepath, EXTRACT::BY_ITERATIVE_KD, 1);
+    //raster solution
+    double yaw = 0, pitch = 0;
+    Vec3d up(0, 1, 0);
+    Vec3d T(0, 0, 0);
+    Mat virtualCamera = ortho_cam(yaw, pitch, 1.0, T);
 
-    return e;
+    int outW = 800, outH = 600;
+    // So, for this step, I'd prefer if we could make it an interactive camera
+    Mat out(600, 800, CV_8UC3);
+    out = Scalar(0, 0, 0);// reproject(solution, estimate2D, virtualCamera, Vec2i(outW, outH));
+    namedWindow("3D Pose", WINDOW_AUTOSIZE);
+    Results * r = new Results();
+    r->img = out;
+    r->project = false;
+    r->extractor = e;
+    r->camera = virtualCamera; r->yaw = yaw; r->pitch = pitch;
+    setMouseCallback("3D Pose", mouse_callback, r);
+
+    imshow("3D Pose", out);
+
+    return r;
 }
 
 /*

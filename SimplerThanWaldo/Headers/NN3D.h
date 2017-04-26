@@ -43,4 +43,6 @@ Pose search_possible_3D_by_kd(std::vector<cv::Vec3d> joints2D, std::vector<Bone>
 
 Pose search_reprojections(std::vector<cv::Vec3d> joints2D, std::vector<Bone> bones2D, PoseDB db);
 
+std::pair<std::vector<jointnames::jointnames>, std::vector<cv::Point2d>> Pose_2D_to_labeled_joints(Pose_2D p);
+std::pair<std::vector<jointnames::jointnames>, std::vector<cv::Vec3d>> Pose2D_to_labeled_3Djoints(Pose_2D p);
 #endif//NN3D_H

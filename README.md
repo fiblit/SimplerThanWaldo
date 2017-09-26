@@ -4,7 +4,7 @@
 Human 3D Pose Estimation from Monocular 2D Images
 
 ## Contributors
-Jacquelyn Sloan, Kyle Fox, Dalton Hildreth
+~~Jacquelyn Sloan~~, Kyle Fox, Dalton Hildreth
 
 ## How-to-build:
 * Install the latest version of [CMake](https://cmake.org/download/) (I have 3.7)
